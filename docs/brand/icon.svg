@@ -1,14 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 384" role="img" aria-label="ytbplus">
-  <defs>
-    <clipPath id="badge-clip">
-      <rect x="8" y="8" width="496" height="368" rx="104"/>
-    </clipPath>
-  </defs>
-
-  <rect x="8" y="8" width="496" height="368" rx="104" fill="#FF0000"/>
-
-  <g fill="#FFFFFF" clip-path="url(#badge-clip)">
-    <path d="M186 112 Q176 106 176 120 L176 264 Q176 278 186 272 L356 200 Q366 194 356 188 Z"/>
-    <path d="M361 74 h30 v30 h30 v30 h-30 v30 h-30 v-30 h-30 v-30 h30 Z"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-label="ytbplus" role="img" viewBox="0 0 512 384"><defs><clipPath id="badge-clip"><rect width="496" height="368" x="8" y="8" rx="104"/></clipPath></defs><rect width="496" height="368" x="8" y="8" fill="red" rx="104"/><g fill="#FFF" clip-path="url(#badge-clip)"><path d="M186 112 Q176 106 176 120 L176 264 Q176 278 186 272 L356 200 Q366 194 356 188 Z"/><path d="M361 74 h30 v30 h30 v30 h-30 v30 h-30 v-30 h-30 v-30 h30 Z"/></g></svg>
