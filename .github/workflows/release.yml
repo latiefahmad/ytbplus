@@ -1,9 +1,9 @@
 name: Release
 
-# Push a tag such as desktop-v0.2.0 to build the app for every platform and
+# Push a tag such as ytbplus-v0.2.0 to build the app for every platform and
 # publish it as a GitHub release, with the signed update files the app's
 # updater reads (docs/updates.md). It is published with --latest=false
-# because the app finds the newest desktop-v release by its tag prefix, not
+# because the app finds the newest ytbplus-v release by its tag prefix, not
 # by GitHub's latest marker. GET /releases/latest can still return it: that
 # endpoint picks the newest non-draft, non-prerelease release regardless of
 # the flag, and that is fine. It builds only after a CI run already passed on
@@ -13,7 +13,7 @@ name: Release
 # or on a branch to build without publishing.
 on:
   push:
-    tags: ["desktop-v*"]
+    tags: ["ytbplus-v*"]
   workflow_dispatch:
 
 permissions:
@@ -65,12 +65,12 @@ jobs:
             tag="${{ github.ref_name }}"
           fi
           case "$tag" in
-            desktop-v*) ;;
+            ytbplus-v*) ;;
             *) echo "Not a version tag: $tag"; exit 1 ;;
           esac
           {
             echo "tag=$tag"
-            echo "version=${tag#desktop-v}"
+            echo "version=${tag#ytbplus-v}"
             echo "sha=${{ github.sha }}"
           } >> "$GITHUB_OUTPUT"
           echo "Releasing $tag"
@@ -125,7 +125,7 @@ jobs:
           ref: ${{ needs.gate.outputs.sha }}
       - name: Check the tag matches mygo.json
         run: |
-          want="desktop-v$(jq -r .version mygo.json)"
+          want="ytbplus-v$(jq -r .version mygo.json)"
           test "${{ needs.gate.outputs.tag }}" = "$want" || {
             echo "Tag ${{ needs.gate.outputs.tag }} does not match mygo.json version $want."
             exit 1
@@ -230,7 +230,7 @@ jobs:
         with:
           go-version-file: go.mod
 
-      # The tag is the version: desktop-v1.2.3 builds as 1.2.3.
+      # The tag is the version: ytbplus-v1.2.3 builds as 1.2.3.
       - name: Set the version
         run: |
           version="${{ needs.gate.outputs.version }}"
@@ -245,7 +245,7 @@ jobs:
       - name: Point the minimal build at its own updates
         if: matrix.variant == 'minimal'
         run: |
-          jq '.updates.tagPrefix = "desktop-minimal-v"' mygo.json > mygo.json.new
+          jq '.updates.tagPrefix = "ytbplus-minimal-v"' mygo.json > mygo.json.new
           mv mygo.json.new mygo.json
 
       - name: Check the update signing key
@@ -260,6 +260,15 @@ jobs:
           key_bytes=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d 2>/dev/null | wc -c)
           test "$key_bytes" = 64 || {
             echo "MYGO_UPDATER_PRIVATE_KEY is $key_bytes bytes once decoded, but a private key is 64. A 32-byte value is the public key: paste mygo-update.key, not mygo-update.pub."
+            exit 1
+          }
+          # The public half of the secret must be the key mygo.json bakes into
+          # the app, or the build signs updates the app rejects.
+          derived=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d \
+            | tail -c 32 | base64 | tr -d '\n')
+          want=$(jq -r .updates.publicKey mygo.json)
+          test "$derived" = "$want" || {
+            echo "The public half of MYGO_UPDATER_PRIVATE_KEY ($derived) is not updates.publicKey in mygo.json ($want)."
             exit 1
           }
 
@@ -467,7 +476,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           version="${{ needs.gate.outputs.version }}"
-          gh release create "desktop-minimal-v$version" minimal-updates/* \
+          gh release create "ytbplus-minimal-v$version" minimal-updates/* \
             --title "ytbplus $version minimal updates" \
-            --notes "Update files for the minimal builds of desktop-v$version. Download ytbplus from that release." \
+            --notes "Update files for the minimal builds of ytbplus-v$version. Download ytbplus from that release." \
             --target "${{ needs.gate.outputs.sha }}" --latest=false

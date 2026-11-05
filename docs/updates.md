@@ -30,13 +30,13 @@ Point `mygo.json` at the public key and where releases are published:
   "updates": {
     "publicKey": "…the contents of mygo-update.pub…",
     "github": "latiefahmad/ytbplus",
-    "tagPrefix": "desktop-v"
+    "tagPrefix": "ytbplus-v"
   }
 }
 ```
 
-`tagPrefix` keeps desktop releases apart from other releases in the same
-repository. Desktop releases are tagged `desktop-v0.1.0` and must not be
+`tagPrefix` keeps ytbplus releases apart from other releases in the same
+repository. Releases are tagged `ytbplus-v0.1.0` and must not be
 the repository's latest release; the app finds the newest tag with the
 prefix through the GitHub API instead.
 
@@ -46,10 +46,10 @@ mygo-update.key`). MyGo reads the key from that variable.
 
 ## Releasing
 
-CI does this when you push a `desktop-v0.2.0` tag (after adding the changelog
+CI does this when you push a `ytbplus-v0.2.0` tag (after adding the changelog
 section): `release.yml` signs the full builds, writes the update files and
 publishes the release, not marked latest. Minimal builds update to minimal
-builds: their update files go to a second release, `desktop-minimal-v0.2.0`,
+builds: their update files go to a second release, `ytbplus-minimal-v0.2.0`,
 because the feed a build bakes in is named only by its platform. The steps
 below are the full build's release by hand.
 
@@ -67,7 +67,7 @@ below are the full build's release by hand.
 3. Publish the release without marking it latest:
 
    ```sh
-   gh release edit desktop-v0.2.0 --draft=false --latest=false
+   gh release edit ytbplus-v0.2.0 --draft=false --latest=false
    ```
 
 Apps check once a day, show the notes, and offer to install, skip, or be

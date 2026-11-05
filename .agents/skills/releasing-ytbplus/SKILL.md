@@ -18,7 +18,7 @@ Prepare and publish a ytbplus release using the repository's version tags and Gi
    [ "$(git rev-parse --is-shallow-repository)" = false ] || git fetch --quiet --unshallow --tags origin
    ```
 
-2. Review every commit since the previous `desktop-vX.Y.Z` tag. Add concise,
+2. Review every commit since the previous `ytbplus-vX.Y.Z` tag. Add concise,
    user-facing notes for shipped changes under `## [Unreleased]` in
    `CHANGELOG.md`; do not list refactors or CI-only changes.
 3. Test the release-preparation helper against its isolated fixture before
@@ -106,8 +106,8 @@ the turn after subscribing and continue when it arrives.
 4. Create and push the full-build release tag on that commit:
 
    ```sh
-   git tag desktop-v0.4.2
-   git push origin desktop-v0.4.2
+   git tag ytbplus-v0.4.2
+   git push origin ytbplus-v0.4.2
    ```
 
    The tag push starts `.github/workflows/release.yml`. It checks that the tag
@@ -139,8 +139,8 @@ the turn after subscribing and continue when it arrives.
 6. Do not mark or unmark a release as GitHub's latest manually, and do not
    investigate which release `/releases/latest` returns. The workflow
    publishes with `--latest=false`, but that endpoint returns the newest
-   non-draft, non-prerelease release regardless, so `desktop-vX.Y.Z` showing
-   as latest is expected. ytbplus's updater finds releases by the `desktop-v`
+   non-draft, non-prerelease release regardless, so `ytbplus-vX.Y.Z` showing
+   as latest is expected. ytbplus's updater finds releases by the `ytbplus-v`
    tag prefix.
 
 Do not force-push or move an existing release tag. If the tag already exists,

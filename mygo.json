@@ -7,9 +7,9 @@
     "ytbplus"
   ],
   "updates": {
-    "publicKey": "wI4WiYlNHJ+j7ElvtCdJV5dekixSMGACa1k4sp5hano=",
+    "publicKey": "vnn7GYUNM6a61vuyv82AVMUc8CT9zfGGPFIpJttDCdc=",
     "github": "latiefahmad/ytbplus",
-    "tagPrefix": "desktop-v"
+    "tagPrefix": "ytbplus-v"
   },
   "linux": {
     "depends": [
