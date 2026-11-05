@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ytbplus.latiefahmad.com/sitemap.xml

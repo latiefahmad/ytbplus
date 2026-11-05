@@ -1,0 +1,19 @@
+{
+  "name": "ytbplus",
+  "identifier": "com.latiefahmad.ytbplus",
+  "version": "1.0.0",
+  "out": "build",
+  "urlSchemes": [
+    "ytbplus"
+  ],
+  "updates": {
+    "publicKey": "wI4WiYlNHJ+j7ElvtCdJV5dekixSMGACa1k4sp5hano=",
+    "github": "latiefahmad/ytbplus",
+    "tagPrefix": "desktop-v"
+  },
+  "linux": {
+    "depends": [
+      "libayatana-appindicator3-1"
+    ]
+  }
+}
