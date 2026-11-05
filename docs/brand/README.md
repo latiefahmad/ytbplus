@@ -2,10 +2,11 @@
 
 | File | Use |
 | --- | --- |
+| `ytbplus.png` | The master app icon artwork, 2000 × 2000 with a transparent background. `resources/icon.png` and the website favicons are exported from it. |
 | `wordmark-light.svg` | The name, on light backgrounds. The app itself shows only the wordmark. |
 | `wordmark-dark.svg` | The name, on dark backgrounds. |
 | `wordmark-accent.svg` | The name with the `+` in the brand blue, for places with room for one extra colour. |
-| `icon.svg` | The app icon, the source of `resources/icon.png`. |
+| `icon.svg` | The app icon as flat vector shapes, matching `ytbplus.png`; the website favicon source. |
 | `tray-wordmark.svg` | The tray wordmark, flat black for template rendering. |
 | `tray-glyph.svg` | The standalone play glyph, flat black for template rendering. |
 | `resources/tray-wordmark.png` | The wordmark export used by the macOS and Linux tray. |
@@ -20,24 +21,28 @@ its own it says what the app adds to the YouTube Music it wraps.
 
 | Name | Hex | Where |
 | --- | --- | --- |
-| Plate, top | `#469DD3` | The icon's background, from top to bottom |
-| Plate, bottom | `#1F5C8C` | The icon's background, from top to bottom |
+| Badge | `#FF0000` | The icon's rounded rectangle |
+| Mark | `#FFFFFF` | The play glyph and the `+` on the badge |
 | Accent | `#3388BB` | The `+` in `wordmark-accent.svg`, and the app's default tint |
-| Sweep | `#FFD364` → `#FF8899` → `#77BBDD` → `#77DD77` | The bar under the play mark |
 | Ink | `#1D1B20` | Wordmark on light backgrounds; `#F3F1F8` on dark ones |
-
-The bar's four stops are the colours the app draws a song's interface from, so
-the icon carries the idea that the cover picks the colour.
 
 ## The icon
 
-`icon.svg` is flat shapes with light Icon Composer-style shading: a gradient
-plate with a lit rim, a gentle top-to-bottom sheen, a white play mark, and a
-coloured bar under it standing in for the progress line.
+`ytbplus.png` is the master artwork: a red rounded badge carrying a white play
+mark with a white `+` at its upper right, so the icon reads as YouTube Music
+plus what the app adds to it. Keep it as the source and export from it rather
+than redrawing the mark by hand.
 
-`resources/icon.png` is the same artwork exported at 1024 × 1024 with a
-transparent background, the rounded square scaled to 824 px and centred (the
-macOS icon grid), with a soft shadow under it.
+`icon.svg` is the same badge as flat vector shapes, for places that need an
+icon that scales without a raster: a `#FF0000` rounded rectangle with the white
+play mark and `+` clipped to it.
+
+`resources/icon.png` is the artwork exported at 1024 × 1024 with a transparent
+background, the badge centred and scaled to 88% of the width.
+
+The website favicons are exported from the same artwork: `favicon.ico` with
+16, 32, 48, 64, 128 and 256 px entries, `favicon-64.png`, and
+`apple-touch-icon.png` at 180 × 180.
 
 The macOS and Linux tray images are transparent PNG exports of the two tray
 SVGs: `tray-wordmark.svg` at 191 × 64 px, and `tray-glyph.svg` at 64 × 64 px

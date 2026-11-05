@@ -8,10 +8,10 @@
 <p align="center">
   <a href="#install">Install</a> ·
   <a href="#features">Features</a> ·
-  <a href="#screenshots">Screenshots</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="#build-from-source">Build</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="CONTRIBUTING.md">Contribute</a> ·
+  <a href="https://saweria.co/latiefahmad">Support</a>
 </p>
 
 A lightweight desktop music player for YouTube Music. ytbplus has a native
@@ -108,34 +108,6 @@ scrobble your listening to Last.fm.
   Choose how many to keep, or turn the cache off.
 - **Updates itself.** ytbplus checks for new versions once a day. You can turn
   this off.
-
-## Screenshots
-
-Screenshots show ytbplus using a signed-in YouTube Music account. Click an
-image to see it full size.
-
-<table>
-  <tr>
-    <td align="center"><a href="docs/screenshots/home.png"><img src="docs/screenshots/home.png" alt="Home page with personalized recommendations" width="300"></a><br><sub>Home</sub></td>
-    <td align="center"><a href="docs/screenshots/explore.png"><img src="docs/screenshots/explore.png" alt="Explore page with new albums and top songs" width="300"></a><br><sub>Explore</sub></td>
-    <td align="center"><a href="docs/screenshots/library.png"><img src="docs/screenshots/library.png" alt="Library with saved playlists and artists" width="300"></a><br><sub>Library</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="docs/screenshots/search.png"><img src="docs/screenshots/search.png" alt="Search results with category filters" width="300"></a><br><sub>Search</sub></td>
-    <td align="center"><a href="docs/screenshots/artist.png"><img src="docs/screenshots/artist.png" alt="Artist page with top songs" width="300"></a><br><sub>Artist</sub></td>
-    <td align="center"><a href="docs/screenshots/playlist.png"><img src="docs/screenshots/playlist.png" alt="Playlist page with its track list" width="300"></a><br><sub>Playlist</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="docs/screenshots/player.png"><img src="docs/screenshots/player.png" alt="Full player with the queue" width="300"></a><br><sub>Player and queue</sub></td>
-    <td align="center"><a href="docs/screenshots/related.png"><img src="docs/screenshots/related.png" alt="Full player with related tracks" width="300"></a><br><sub>Related tracks</sub></td>
-    <td align="center"><a href="docs/screenshots/stats.png"><img src="docs/screenshots/stats.png" alt="Listening stats with plays per day" width="300"></a><br><sub>Listening stats</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="docs/screenshots/settings-appearance.png"><img src="docs/screenshots/settings-appearance.png" alt="Appearance settings with theme and palette" width="300"></a><br><sub>Appearance</sub></td>
-    <td align="center"><a href="docs/screenshots/settings-sound.png"><img src="docs/screenshots/settings-sound.png" alt="Equaliser settings" width="300"></a><br><sub>Equaliser</sub></td>
-    <td align="center"><a href="docs/screenshots/settings-keyboard.png"><img src="docs/screenshots/settings-keyboard.png" alt="Keyboard shortcut settings" width="300"></a><br><sub>Shortcuts</sub></td>
-  </tr>
-</table>
 
 ## Install
 
@@ -510,6 +482,14 @@ with the characters for *ytbplus* (迷路, "maze") and *hibi* (日々, "days"), 
 reads as "maze days" or "ytbplus days". But the song is pronounced "Melody"
 (メロディ), a pun on the English word. The app is named ytbplus after the first
 half of the title.
+
+## Support
+
+ytbplus is free software I build in my own time, with no ads, no tracking and
+no paid tier. If it earns a place in your day, you can buy me a coffee at
+[saweria.co/latiefahmad](https://saweria.co/latiefahmad). Donations are a
+thank-you, not a subscription: nothing in the app is locked behind them, and
+they do not buy a say in the [non-goals](#non-goals).
 
 ## Credits
 
