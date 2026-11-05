@@ -5,267 +5,192 @@
   </picture>
 </p>
 
+<h1 align="center">ytbplus</h1>
+
 <p align="center">
-  <a href="#install">Install</a> ·
+  A native desktop player for YouTube Music. About 100 MB of memory, no ads,
+  Last.fm scrobbling, synced lyrics, and colours that follow each song.
+</p>
+
+<p align="center">
+  <a href="https://github.com/latiefahmad/ytbplus/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/latiefahmad/ytbplus?style=flat-square&color=e11d48&logo=youtube&logoColor=white"></a>
+  <a href="https://github.com/latiefahmad/ytbplus/releases"><img alt="Platforms" src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-e11d48?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-e11d48?style=flat-square"></a>
+  <a href="https://saweria.co/latiefahmad"><img alt="Support on Saweria" src="https://img.shields.io/badge/Support-Saweria-e11d48?style=flat-square&logo=buymeacoffee&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <a href="#install"><b>Install</b></a> ·
   <a href="#features">Features</a> ·
+  <a href="#signing-in">Signing in</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="#build-from-source">Build</a> ·
   <a href="CONTRIBUTING.md">Contribute</a> ·
-  <a href="https://saweria.co/latiefahmad">Support</a>
+  <a href="https://saweria.co/latiefahmad">☕ Support</a>
 </p>
 
-A lightweight desktop music player for YouTube Music. ytbplus has a native
-interface rather than a browser-based one, and typically uses about 100 MB of
-memory. It plays music without loading the YouTube Music web page, and can
-scrobble your listening to Last.fm.
-
 <p align="center">
-  <a href="docs/screenshots/lyrics.png"><img src="docs/screenshots/lyrics.png" alt="Full player with synced lyrics, the sung line lit in the middle" width="720"></a>
+  <a href="docs/screenshots/lyrics.png"><img src="docs/screenshots/lyrics.png" alt="Full player with synced lyrics, the sung line lit in the middle" width="720"></a><br>
+  <sub>The full player: synced lyrics, the sung line lit in the middle.</sub>
 </p>
 
 > **Beta and unofficial.** ytbplus is an independent project. It is not made,
 > endorsed or supported by YouTube or Google, and it uses YouTube's private web
 > interfaces, which YouTube can change at any time. When that happens, parts of
-> ytbplus (browsing, search, playback, sign-in) may stop working until it is
-> updated. See [Known issues](#known-issues) and
-> [Troubleshooting](#troubleshooting).
+> ytbplus may stop working until it is updated. See
+> [Known issues](#known-issues) and [Troubleshooting](#troubleshooting).
+
+## Why ytbplus
+
+YouTube Music has no desktop app, and the web app takes 600–800 MB of RAM in a
+browser tab. ytbplus is what I wanted instead: a native window that plays the
+music without loading the web page, in about a tenth of the memory — and in
+Material 3 Expressive, which the official app still isn't.
+
+| | ytbplus | YouTube Music in a browser tab |
+| --- | ---: | ---: |
+| Memory | ~100 MB | 600–800 MB |
+| Ads from the web page | none | shown |
+| Synced lyrics | built in | limited |
+| Colours from the album art | built in | — |
+| Last.fm scrobbling | built in | needs an extension |
 
 ## Features
 
 ### Find your music
 
 - **Home and Explore.** The same recommendations, new releases and charts you
-  see on YouTube Music, plus artist, album and playlist pages.
-- **Search.** Look up songs, albums, artists and playlists, and filter the
-  results. Your recent searches are saved.
-- **Podcasts.** Browse shows and episodes, read episode details, and pick up
-  where you left off.
-- **Song menus.** Play a song next, add it to a playlist, start a radio from
-  it, go to the artist, or copy a link to share.
+  see on YouTube Music.
+- **Search.** Songs, albums, artists and playlists, with filters. Recent
+  searches are saved.
+- **Podcasts.** Browse shows, read episode details, pick up where you left off.
+- **Every page you expect.** Artist, album and playlist pages, plus song menus
+  for play next, start a radio, and copy a link to share.
 
 ### Listen
 
 - **No web-page ads.** ytbplus plays the music directly instead of loading the
-  YouTube Music web page, so it does not show ads from that page.
-- **Everything you expect from a player.** Play, pause, skip, shuffle, repeat,
-  volume, and a queue you can see and change. A small player follows you while
-  you browse, and the full player shows the queue, lyrics and related songs.
-- **Lyrics that follow the song.** The line being sung is highlighted as the
-  song plays, and word-synced lyrics light each word as it is reached. ytbplus
-  takes them from Better Lyrics, YouTube Music or LRCLIB. You can switch to
-  plain text.
-- **Music that keeps going.** When your queue ends, ytbplus adds similar songs so
-  the music does not stop.
-- **Pick up where you left off.** Open ytbplus again and your queue and song are
-  waiting for you.
-- **Keeps playing when you close the window.** On macOS and Windows, open the
-  mini player from the tray. On Linux, the tray menu offers **Open ytbplus** and
-  **Quit**; the mini player is not available there.
-- **Works with your computer's controls.** Use your media keys, the Now Playing
-  widget on Mac, or the media controls on Linux.
-- **Share what you hear on Discord.** With Discord or another client that
-  supports Discord Rich Presence running, enable Discord Rich Presence in
-  Settings → Desktop to show the current track, artist, cover and a time bar
-  with the elapsed time and the track's length; the member list shows the
-  artist. Some clients require you to enable RPC in their settings. ytbplus
-  clears the activity when playback pauses or stops.
-- **Keyboard shortcuts.** Control music from the keyboard, and change the keys
-  to what suits you.
+  YouTube Music web page.
+- **A full player.** Play, pause, skip, shuffle, repeat, volume, and a queue you
+  can see and change. A small player follows you while you browse.
+- **Lyrics that follow the song.** The sung line is highlighted, and word-synced
+  lyrics light each word. ytbplus takes them from Better Lyrics, YouTube Music
+  or LRCLIB, and you can switch to plain text.
+- **Music that keeps going.** When your queue ends, ytbplus adds similar songs.
+- **Pick up where you left off.** Your queue and song are waiting next time.
 
 ### Your account and library
 
-- **Sign in with your Google account.** Get your personalized Home feed and
-  Library.
-  ytbplus never sees your password. You can still browse and play without
-  signing in.
+- **Sign in with your Google account** for your personalized Home feed and
+  Library. ytbplus never sees your password, and you can browse and play
+  without signing in.
 - **Manage your library.** Like songs, follow artists, save albums and
-  playlists, and create or delete your own playlists.
-- **Organize playlists.** Sort a playlist by title, artist or length, or
-  search inside it.
+  playlists, and create or delete your own.
+- **Organize playlists.** Sort by title, artist or length, or search inside one.
 
-### Make it sound and look yours
+### Make it yours
 
-- **Equaliser.** Adjust the bass, treble and everything between, or pick a
-  preset. Turn on volume levelling so songs play at a similar loudness.
-- **Colours and themes.** Light, dark, or follow your computer. Pick a colour,
-  or let the app take its colours from the album art of the song playing.
-  Take the colours from matugen to [match the rest of the desktop exactly](#match-your-desktop-with-matugen).
-- **Zoom.** Make everything on screen larger or smaller, from 80% to 200%, in
-  Settings → Appearance or with `Cmd`/`Ctrl` and `=` or `-`.
+- **Equaliser.** Bass, treble and everything between, with presets and volume
+  levelling.
+- **Colours and themes.** Light, dark, or follow your system. Pick a colour, or
+  let the album art choose it — or take them from matugen to
+  [match the rest of your desktop](#match-your-desktop-with-matugen).
+- **Keyboard shortcuts**, and keys you can change.
+- **Zoom** from 80% to 200%.
+- **Last.fm scrobbling**, pausable any time, and **listening stats** kept on
+  your computer and clearable whenever you like.
 
-### Keep track of what you hear
+### Desktop niceties
 
-- **Last.fm scrobbling.** Connect your Last.fm account and ytbplus scrobbles the
-  tracks you play to your profile. Pause scrobbling any time.
-- **Listening stats.** See your listening time by day. The history stays on
-  your computer, and you can delete it whenever you like.
-
-### Light and simple
-
-- **Small and quick.** ytbplus typically uses about 100 MB of memory, much less
-  than YouTube Music in a browser tab.
-- **Caches recent songs.** Tracks you played recently load faster next time.
-  Choose how many to keep, or turn the cache off.
-- **Updates itself.** ytbplus checks for new versions once a day. You can turn
-  this off.
+- **Keeps playing when you close the window.** Use the mini player from the
+  tray on macOS and Windows; the Linux tray offers **Open ytbplus** and **Quit**.
+- **Works with your computer's controls.** Media keys, the macOS Now Playing
+  widget, and Linux media controls.
+- **Discord Rich Presence** for the track you're playing.
+- **Caches recent songs**, and **updates itself** once a day if you leave that
+  on.
 
 ## Install
 
-Download the latest build for your system from the
-[releases page](https://github.com/latiefahmad/ytbplus/releases).
+<a href="https://github.com/latiefahmad/ytbplus/releases/latest"><img alt="Download the latest release" src="https://img.shields.io/badge/Download-Latest%20release-e11d48?style=for-the-badge&logo=youtube&logoColor=white"></a>
 
-### Which file do I download?
+Pick one file from the [releases page](https://github.com/latiefahmad/ytbplus/releases).
 
-The release page lists several files. Choose one for your system:
-
-**Step 1. Find your system.**
+**1. Find your system.**
 
 | You have | Download the file that ends in |
 | --- | --- |
 | A Mac (any Mac) | `.dmg` |
-| Windows, no installer | `-portable.zip` |
+| Windows | `-portable.zip`, or the `-setup.exe` installer |
 | Ubuntu, Debian, Linux Mint, Pop!_OS | `.deb` |
 | Fedora | `.rpm` |
 | Any Linux with Flatpak (full build only) | `.flatpak` |
 | Arch, Manjaro, or any other Linux | `.AppImage` |
 
-On Windows, you can also choose the `-setup.exe` installer instead.
+The `.AppImage` needs no installer: make it executable, then open it.
 
-Arch does not have a native package yet. The `.AppImage` runs without an
-installer: make the file executable, then open it.
+**2. Choose the right processor (Linux only).** Run `uname -m`: `x86_64` means
+take the file with `amd64` in its name, `aarch64` means `arm64`. Macs and
+Windows need no choice — one `.dmg` covers Apple Silicon and Intel, and the
+Windows builds are `amd64`.
 
-**Step 2. Choose the right processor (Linux only).** Most computers use
-`amd64`. Choose `arm64` only for an ARM computer. To check, open a terminal
-and run `uname -m`.
+**3. Take a full build unless you know you want minimal.** Files with
+`-minimal` expect `ffmpeg`, `yt-dlp`, and Node.js or Bun already on your
+`PATH`, and they break playback without them. If you use one, keep `yt-dlp`
+current.
 
-- It prints `x86_64`: choose the file with `amd64` in its name.
-- It prints `aarch64`: choose the file with `arm64` in its name.
-
-Macs and Windows need no chip choice. One `.dmg` works on Apple Silicon and on
-Intel. Windows downloads are for `amd64`.
-
-**Step 3. Choose a full or minimal build.** The full build is the easiest
-option. Files with `-minimal` in the name are for people who already have
-`ffmpeg`, `yt-dlp`, and Node.js or Bun installed. Without those tools, playback
-will not work. Choose a file without `-minimal` unless you specifically want
-the minimal build.
-
-If you do use a minimal build, keep `yt-dlp` up to date (for example
-`yt-dlp -U`, or your package manager's latest). An old `yt-dlp` can cause slow
-or failed playback.
-
-Do not download files named `update-*.json`, files ending in `.delta`, or the
-Windows update `.tar.gz` archive. ytbplus uses those files to update itself.
-The Linux `.tar.gz` package is for Linux users.
-
-For example, on Ubuntu with a normal Intel or AMD computer, download
-`ytbplus-<version>-linux-amd64.deb`.
+Skip files named `update-*.json`, files ending in `.delta`, and the Windows
+update `.tar.gz`; ytbplus uses those to update itself.
 
 ### Install steps
 
-**macOS:** Open the disk image and drag ytbplus to Applications. The app is not
-notarized by Apple yet, so the first time, right-click it and choose **Open**
-(or allow it under System Settings > Privacy & Security).
-
-**Linux:** Install the `.deb` on Debian or Ubuntu, or the `.rpm` on Fedora or a
-compatible RPM-based distribution. With Flatpak, run
-`flatpak install --user ytbplus-<version>-linux-amd64.flatpak`. You can also make the `.AppImage` executable
-and run it, or unpack the `.tar.gz` and run its `install.sh`. All Linux builds
-need GTK 3 and WebKitGTK 4.1. The tray also needs the AppIndicator runtime:
-Debian/Ubuntu packages install `libayatana-appindicator3-1`, and Fedora packages
-install `libayatana-appindicator-gtk3`. If you use an AppImage or `.tar.gz`,
-install the matching package yourself. Other distributions may use a different
-package name.
-
-**Windows portable version:** Extract the `-portable.zip` file, keeping the
-files together, then open `ytbplus.exe` in the extracted `ytbplus` folder. It does
-not need an installer or administrator permission. Settings and other user
-data stay in your Windows user profile. You can also run the `-setup.exe`
-installer. **Windows support is untested.** Please report any problems you
-find.
+- **macOS.** Open the disk image and drag ytbplus to Applications. It is not
+  notarized yet, so the first time, right-click it and choose **Open**.
+- **Windows.** Extract the `-portable.zip` and run `ytbplus.exe` from the
+  extracted folder; it needs no installer or administrator rights. **Windows
+  support is untested** — please report what you find.
+- **Linux.** Install the `.deb` or `.rpm`, or run
+  `flatpak install --user ytbplus-<version>-linux-amd64.flatpak`. All Linux
+  builds need GTK 3 and WebKitGTK 4.1; the tray also needs the AppIndicator
+  runtime, which the `.deb` and `.rpm` install for you
+  (see [the Linux tray note](#the-linux-tray-is-missing-or-open-ytbplus-does-nothing)).
 
 ## Signing in
 
-To see your personalized Home feed and Library, choose **Sign in** and then
-**Sign in with a browser window**. ytbplus opens a separate browser window with a
-new, empty profile, and you sign in to your Google account there. ytbplus never
-sees your password. When the sign-in finishes, ytbplus takes the YouTube Music
-session from that window, closes it, and deletes its profile.
+Signing in gives you your personalized Home feed and Library, but public
+browsing and playback need no account at all.
 
-ytbplus opens the window in your system's default browser when that browser is
-Chrome, Edge, Brave, Helium, Chromium, Vivaldi, Firefox or Zen. If your
-default browser is something else, such as Safari, ytbplus uses the first of
-those browsers that it finds installed. A Firefox or Zen default that it
-cannot find, or cannot read because yt-dlp is missing, falls back to the first
-Chromium-based browser it finds. Firefox and Zen need yt-dlp, which ytbplus
-also needs for playback.
+**The quick way: import from the browser you already use.** Sign in at
+[music.youtube.com](https://music.youtube.com) in Chrome, Edge, Brave, Firefox,
+Safari or Helium, open ytbplus, choose **Sign in → Import from a browser**, and
+pick that browser. No email or password is typed into ytbplus, which never sees
+your password either way.
 
-The Flatpak cannot open a browser window until you let it start programs
-outside its sandbox. It does not ask for this permission by default. To grant
-it, run this command, then restart ytbplus:
+An imported session is a copy of one your browser keeps using, so YouTube can
+replace its cookies and leave the copy dead — often within hours. If that
+happens, import again.
 
-```sh
-flatpak override --user --talk-name=org.freedesktop.Flatpak com.latiefahmad.ytbplus
-```
+**The durable way: the sign-in window.** Under **Other ways to sign in**,
+**Sign in with a browser window** opens a separate window with a new, empty
+profile. It is not your browser, so your bookmarks, extensions and saved
+passwords are not there, but the session it produces is not shared with any
+browser and keeps working longer.
 
-To remove the permission again, run
-`flatpak override --user --no-talk-name=org.freedesktop.Flatpak com.latiefahmad.ytbplus`.
-Without it, you can still sign in by importing from a browser or by pasting
-the Cookie header.
-
-YouTube Music does not offer a sign-in method for third-party apps. ytbplus uses
-a browser session, which has the same account access as that browser session.
-Treat it like a password.
-
-### Limits of the browser window
-
-- **A supported browser must be installed.** The window needs Chrome, Edge,
-  Brave, Helium, Chromium, Vivaldi, Firefox or Zen. Safari cannot be used for
-  it, even when it is your default browser. If you have none of the supported
-  browsers, use one of the other ways below.
-- **Google may refuse the sign-in.** Google may show "This browser or app may
-  not be secure" or block the sign-in. Its checks can change at any time. If
-  that happens, try one of the other sign-in options below.
-- **The window is not your browser.** Your bookmarks, extensions, saved
-  passwords and other sessions are not there. You may need to complete a
-  second-factor step.
-- **Close the window only after it finishes.** If you close it early, the
-  sign-in stops and you can try again. A sign-in that takes more than five
+- Google may refuse it with "This browser or app may not be secure". Its checks
+  can change at any time.
+- Close the window only after it finishes; a sign-in that takes more than five
   minutes stops by itself.
-- **The session can still end.** YouTube can end a session at any time, for
-  example when you sign out everywhere or change your password. ytbplus then asks
-  you to sign in again. A session that you took from the sign-in window is
-  never opened in a browser again, so it is not renewed behind your back.
+- The Flatpak cannot open that window until you let it start programs outside
+  its sandbox:
+  `flatpak override --user --talk-name=org.freedesktop.Flatpak com.latiefahmad.ytbplus`.
 
-### Other ways to sign in
-
-These are under **Advanced** in the sign-in dialog. Sign in at
-[music.youtube.com](https://music.youtube.com) in a browser first, then choose
-**Import from a browser** in ytbplus. ytbplus can import from Chrome,
-Safari, Firefox, Brave or Edge. It can also import from Helium when it finds a
-browser profile. You can also paste the `Cookie` header of a request to
-music.youtube.com.
-
-These two ways copy a session that your own browser keeps using. YouTube
-replaces the cookies of a session while a browser has it open, and the older
-copy then stops working. A copy like this can end within hours, and you have to
-sign in again. Prefer the browser window.
-
-ytbplus stores the session in a file that only your user can read, encrypted
-with a key it keeps in the system credential store: the Keychain on macOS, the
-Secret Service (such as GNOME Keyring or KWallet) on Linux, and the Credential
-Manager on Windows. On macOS, the first launch after an update asks once to
-use the key: choose **Always Allow**. If the system has no credential store,
-the file is not encrypted. A locked or failing credential store does not make
-ytbplus write the session unencrypted. Choose **Sign out** to remove ytbplus's saved session.
-
-Public browsing and playback do not need an account.
+Anyone who has your session has your account, so treat it like a password.
+[Privacy](#privacy) covers where ytbplus keeps it.
 
 ## Match your desktop with matugen
 
-ytbplus can use the full set of colours matugen makes, so it matches your other
-apps. Matugen writes them to their own file, `colors.json`, so your settings
-are never touched.
+ytbplus can use the full set of colours matugen makes. Matugen writes them to
+their own file, `colors.json`, so your settings are never touched.
 
 1. Copy [`ytbplus-colors.json`](docs/matugen/ytbplus-colors.json) to
    `~/.config/matugen/templates/`.
@@ -283,149 +208,145 @@ are never touched.
 3. Run matugen as usual, for example `matugen image wallpaper.png`.
 4. In Settings → Appearance, set **Colour source** to **Matugen**.
 
-ytbplus recolours as soon as the file changes, and goes back to your seed if you
-delete it. The file holds a light and a dark set, so Settings → Appearance →
-Theme still chooses between them. While the source is Matugen, the colour and
-palette pickers are hidden; **Fixed** brings both back and **Artwork** brings
-back the palette, and the file is ignored. A role the file leaves out keeps the
-colour ytbplus makes from your seed.
+ytbplus recolours as soon as the file changes, and falls back to your seed if
+you delete it. The file holds a light and a dark set, so Theme still chooses
+between them. While the source is Matugen the colour and palette pickers are
+hidden; **Fixed** and **Artwork** bring them back and ignore the file. A role
+the file leaves out keeps the colour ytbplus makes from your seed.
 
 ## Troubleshooting
 
-**Where are the logs?** Open **Settings** and choose **Open logs folder** under
-Logs. ytbplus writes `ytbplus.log` there, rolling over to three older files. The
-top of each file lists the versions of ytbplus, ffmpeg and yt-dlp in use. ytbplus
-removes passwords and cookies from log lines before it writes them, but read a
-log before you post it.
+**Where are the logs?** Settings → **Open logs folder**. ytbplus writes
+`ytbplus.log` there, rolling over to three older files, and the top of each
+lists the versions of ytbplus, ffmpeg and yt-dlp in use. Passwords and cookies
+are stripped before writing, but read a log before you post it.
 
-**I can't sign in.**
-- If the browser window does not open, or Google says the browser is not
-  secure, install Chrome, Edge, Brave, Helium, Chromium, Vivaldi, Firefox or
-  Zen, or use one of the other ways to sign in.
-- If you imported a session and it ended, sign in again with the browser
-  window. An imported session stops working when your browser renews its
-  cookies.
-- To import, sign in at [music.youtube.com](https://music.youtube.com) in the browser
-  first, then pick that same browser in ytbplus. Use a profile where you are
-  signed in to YouTube Music.
-- Close the browser, or try again after it has been open for a moment. Some
-  browsers lock their cookie file while running.
-- On Linux, the browser's cookies are encrypted with the desktop keyring. If
-  the keyring is locked or missing, unlock it, or try another browser.
-- If YouTube signed you out in the browser, the saved session is no longer
-  valid. Choose **Sign out** and sign in again.
-- You can browse and play public music without signing in.
+<details>
+<summary><b>Nothing plays, or a track fails</b></summary>
 
-**Nothing plays, or a track fails.**
-- Check that you are online, then try another track. Some tracks are not
-  available in your region or need an account (age-restricted or Premium
-  tracks).
-- ytbplus finds streams with yt-dlp. YouTube changes often, and an old yt-dlp
-  stops working. Install a release of ytbplus with a newer yt-dlp, or, with a
-  minimal build, update the `yt-dlp` on your `PATH`.
-- Look for the error in the log (see above).
+Check that you are online, then try another track: some are unavailable in your
+region or need an account. ytbplus finds streams with yt-dlp, and YouTube
+changes often, so an old yt-dlp stops working — install a newer release, or
+update the `yt-dlp` on your `PATH` if you use a minimal build.
 
-**ffmpeg or yt-dlp problems.** The full build bundles both. The minimal build
-needs `ffmpeg`, `yt-dlp`, and Node.js or Bun on `PATH`; if one is missing or
-too old, playback fails. Run `ffmpeg -version` and `yt-dlp --version` in a
-terminal to check them. The log header shows which versions ytbplus found.
+</details>
 
-**Linux does not start.** ytbplus needs GTK 3 and WebKitGTK 4.1. Install them
-with your package manager.
+<details>
+<summary><b>ffmpeg or yt-dlp problems</b></summary>
 
-**The Linux tray icon is missing, or Open ytbplus does not restore the window.**
-The tray needs the AppIndicator runtime and a desktop panel that supports
-AppIndicator or StatusNotifier icons. GNOME may need an AppIndicator extension
-enabled. The `.deb` and `.rpm` packages install the runtime; for an AppImage or
-`.tar.gz`, install `libayatana-appindicator3-1` on Debian/Ubuntu or
-`libayatana-appindicator-gtk3` on Fedora. When the icon appears, choose
-**Open ytbplus** from its menu to restore the main window. Linux tray protocols
-do not report icon clicks or icon position, so a separate mini-player flyout
-would open in the center of the primary display's work area rather than beside
-the tray icon. ytbplus skips that flyout; its Linux tray menu only offers
-**Open ytbplus** and **Quit**. If the tray is unavailable, the main player still
-works, but **Close to tray** does not. Linux media controls use MPRIS and do
-not depend on the tray.
+The full build bundles both. The minimal build needs `ffmpeg`, `yt-dlp`, and
+Node.js or Bun on `PATH`. Run `ffmpeg -version` and `yt-dlp --version` to check
+them; the log header shows which versions ytbplus found.
 
-**macOS says the app can't be opened.** ytbplus is not notarized yet. Right-click
-it and choose **Open**, or allow it in System Settings > Privacy & Security.
+</details>
 
-Still stuck? Settings has a report button that opens a GitHub issue prefilled
-with your versions. Otherwise
-[open an issue](https://github.com/latiefahmad/ytbplus/issues) and attach the
-relevant part of the log.
+<details>
+<summary><b>Sign-in problems</b></summary>
+
+- If a browser import ended, sign in at [music.youtube.com](https://music.youtube.com)
+  in that browser first, then import again. Use a profile that is signed in.
+- Some browsers lock their cookie file while running. Close the browser, or try
+  again after it has been open for a moment.
+- On Linux the cookies are encrypted with the desktop keyring. If it is locked
+  or missing, unlock it or try another browser.
+- If YouTube signed you out in the browser, the saved session is dead: choose
+  **Sign out**, then sign in again.
+
+</details>
+
+<details>
+<summary id="the-linux-tray-is-missing-or-open-ytbplus-does-nothing"><b>Linux: the tray is missing, or Open ytbplus does nothing</b></summary>
+
+The tray needs the AppIndicator runtime and a panel that supports
+AppIndicator or StatusNotifier icons; GNOME may need an extension enabled. The
+`.deb` and `.rpm` install the runtime — for an AppImage or `.tar.gz`, install
+`libayatana-appindicator3-1` on Debian/Ubuntu or `libayatana-appindicator-gtk3`
+on Fedora.
+
+Linux tray protocols report neither icon clicks nor icon position, so a
+mini-player flyout would open in the centre of the display rather than beside
+the icon. ytbplus skips it; its Linux tray menu only offers **Open ytbplus** and
+**Quit**. Without a tray the player still works, but **Close to tray** does
+not. Media controls use MPRIS and never depend on the tray.
+
+</details>
+
+<details>
+<summary><b>Linux does not start</b></summary>
+
+ytbplus needs GTK 3 and WebKitGTK 4.1. Install them with your package manager.
+
+</details>
+
+<details>
+<summary><b>macOS says the app can't be opened</b></summary>
+
+ytbplus is not notarized yet. Right-click it and choose **Open**, or allow it in
+System Settings > Privacy & Security.
+
+</details>
+
+<details>
+<summary><b>Still stuck</b></summary>
+
+Settings has a report button that opens a GitHub issue prefilled with your
+versions. Otherwise [open an issue](https://github.com/latiefahmad/ytbplus/issues)
+and attach the relevant part of the log.
+
+</details>
 
 ## Known issues
 
 - ytbplus depends on YouTube's private interfaces and on yt-dlp, so a change on
   YouTube's side can break browsing, playback or sign-in until a fix ships.
-- The Windows build is untested (see [Install](#install)).
-- The macOS app is not notarized, so the first launch needs the manual step
-  above.
-- Sign-in uses a browser session, because YouTube Music offers no sign-in for
-  other apps. Google may refuse the browser window (see
-  [Limits of the browser window](#limits-of-the-browser-window)).
-  Sessions that you import from your own browser can stop working within hours.
+- The Windows build is untested, and the macOS app is not notarized.
+- Sign-in needs a browser session, because YouTube Music offers no sign-in for
+  other apps. Google may refuse the sign-in window, and an imported session can
+  stop working within hours.
 - Tracks that YouTube restricts for your region or account may not play.
 
 See the [open issues](https://github.com/latiefahmad/ytbplus/issues) for the rest.
 
 ## Privacy
 
-ytbplus does not run its own account service, analytics, telemetry or servers.
-It connects to YouTube and Google for YouTube Music, streams and artwork, and
-uses yt-dlp to find streams. If you connect Last.fm in Settings, ytbplus also
-sends your listening there. When automatic updates are enabled, ytbplus contacts
-its update server to check for new versions. You can turn this off in Settings
-under Updates.
+ytbplus runs no account service, analytics, telemetry or servers of its own. It
+talks to YouTube and Google for YouTube Music, streams and artwork, and uses
+yt-dlp to find streams. If you connect Last.fm it also sends your listening
+there, and when automatic updates are on it checks its update server. Both can
+be turned off in Settings.
 
-What ytbplus keeps on your device:
-- **Settings**, **listening history** (the latest plays, used for the stats),
-  and the **playback state**, in the app's user data folder. Settings has a
-  button to clear the history.
-- **Your session**, if you sign in, in a file readable only by your user,
-  encrypted with a key in the system credential store when there is one.
-  **Sign out** removes it.
-  The session has the same access to your account as the browser session it
-  came from, so treat it like a password.
-- **Your Last.fm session**, if you connect Last.fm, stored the same way,
-  apart from the settings, which hold only the account's name. ytbplus
-  never sees your Last.fm password: you approve it on Last.fm's own page.
-  Plays that could not be sent wait in a file beside it. **Disconnect** deletes
-  both.
-- **Cached audio and artwork**, in the cache folder you chose. Set the audio
-  limit to `0` to turn the audio cache off.
-- **Logs**, with secrets removed, in the logs folder.
+What stays on your device:
 
-ytbplus reads cookies only when you choose to sign in, and only to take the
-YouTube Music session. With the browser window, it reads them from the window
-that it opened. With an import, it reads them from the browser that you pick.
+- **Settings, listening history and playback state** in the app's user data
+  folder. Settings has a button to clear the history.
+- **Your session**, and **your Last.fm session**, each in a file only your user
+  can read and encrypted with a key in the system credential store — the
+  Keychain on macOS, the Secret Service on Linux, the Credential Manager on
+  Windows. On macOS the first launch after an update asks once to use the key:
+  choose **Always Allow**. Without a credential store the file is not
+  encrypted. **Sign out** and **Disconnect** delete them.
+- **Cached audio and artwork** in the folder you chose; set the audio limit to
+  `0` to turn caching off.
+- **Logs**, with secrets removed.
+
+ytbplus reads cookies only when you ask it to sign in, and only to take the
+YouTube Music session — from the window it opened, or from the browser you
+picked.
 
 ## Non-goals
 
-ytbplus stays small on purpose. These things stay out of scope and will not be
-implemented. If you open a pull request that adds one of them, I will not
-accept it. Feel free to maintain a fork of your own if you want to add these
-features.
-[GroophyLifefor/ytbplus](https://github.com/GroophyLifefor/ytbplus) is a great
-example. They built SoundCloud, a sync server, MusicBrainz linking,
-recommendations and a listening history page, among many other things, on top
-of ytbplus. It is not part of ytbplus, but feel free to check it out if you want to
-see how these features can work.
+ytbplus stays small on purpose. These will not be implemented, and a pull
+request that adds one will not be accepted. Fork away if you want them:
+[GroophyLifefor/ytbplus](https://github.com/GroophyLifefor/ytbplus) added
+SoundCloud, a sync server, MusicBrainz linking and more on top of ytbplus, and
+is a good place to see how.
 
-- **Video.** Music videos play as audio, with a badge on the artwork. ytbplus
-  shows no picture.
-- **Local files.** ytbplus plays what YouTube Music has. It does not import your
-  own audio files.
-- **Uploads.** ytbplus does not upload music to YouTube Music or manage an
-  upload library.
-- **Casting.** ytbplus plays on the computer it runs on. It does not send the
-  music to a TV, a speaker or another device.
-- **Other services.** ytbplus plays YouTube Music only. It does not play from
-  Spotify, Apple Music or another service.
-- **Social features.** ytbplus changes only your own library: likes, saved
-  albums, follows and your own playlists. It does not comment, share a library
-  or collaborate on a playlist.
+- **Video.** Music videos play as audio, with a badge on the artwork.
+- **Local files.** ytbplus plays what YouTube Music has.
+- **Uploads.** No uploading or managing an upload library.
+- **Casting.** It plays on the computer it runs on.
+- **Other services.** YouTube Music only — no Spotify or Apple Music.
+- **Social features.** It changes only your own library.
 
 ## Build from source
 
@@ -434,23 +355,15 @@ You need [Bazel](https://bazel.build/), installed through
 version from `.bazelversion`.
 
 ```sh
-bazel run //:dev                          # live reload; ffmpeg and yt-dlp must be on PATH
-bazel run //:dist -- --run linux-amd64    # build the production app with bundled tools, then open it
-bazel run //:dist -- --run --minimal linux-amd64   # build and open with system ffmpeg, yt-dlp, and Node.js/Bun
+bazel run //:dev                                    # live reload; ffmpeg and yt-dlp on PATH
+bazel run //:dist -- --run linux-amd64              # production build with bundled tools, then open it
+bazel run //:dist -- --run --minimal linux-amd64    # build against system ffmpeg, yt-dlp, and Node.js/Bun
 ```
 
 `bazel run //:dist -- <platform>` builds into `build/<platform>/`. The
-platforms are `darwin-universal`, `darwin-arm64`, `darwin-amd64`,
-`linux-amd64` and `linux-arm64`.
-
-The minimal build expects `ffmpeg`, `yt-dlp`, and either Node.js or Bun on
-`PATH`. It does not bundle any of these tools or a JavaScript runtime.
-
-Releases include full and minimal builds: a universal DMG for macOS, a Windows
-`amd64` installer for each build and a full-build portable ZIP, plus Linux
-`amd64` and `arm64` `.deb`, `.rpm`, `.flatpak` (full build only), `.AppImage`, and `.tar.gz` downloads.
-Minimal downloads include `-minimal` in the filename. Find them on the
-[releases page](https://github.com/latiefahmad/ytbplus/releases).
+platforms are `darwin-universal`, `darwin-arm64`, `darwin-amd64`, `linux-amd64`
+and `linux-arm64`. Releases ship full and minimal builds of each; see
+[Install](#install) for the files.
 
 ## Contributing
 
@@ -458,56 +371,42 @@ Bug reports, fixes and docs are welcome. Read
 [CONTRIBUTING.md](CONTRIBUTING.md) first, and check the
 [non-goals](#non-goals) before you propose a feature.
 
-## About
-
-I use YouTube Music exclusively. It doesn't have a desktop app, and the web app
-is such a resource hog: it takes around 600-800 MB of RAM on day-to-day use. So
-I decided what someone with a lot of tokens to spare would do: make it myself.
-
-The app is built using [MyGO!!!!!](https://github.com/egoist/mygo), a framework
-for building native desktop apps with a low footprint using Go. It's relatively new, and
-I just wanted to try it out myself :p It's built using the Material 3 Expressive
-design language, because, duh?
-
-Basically what I'd expect from the official YouTube Music, since we're supposed
-to be using Material 3 Expressive at this point. Google hasn't done it (yet?),
-so I made it myself.
-
-### Where the name comes from
-
-ytbplus is built with the [MyGO](https://github.com/egoist/mygo) framework, and
-its name comes from one of MyGO!!!!!'s songs,
-[迷路日々](https://www.youtube.com/watch?v=STgVa-reZkM). The title is written
-with the characters for *ytbplus* (迷路, "maze") and *hibi* (日々, "days"), so it
-reads as "maze days" or "ytbplus days". But the song is pronounced "Melody"
-(メロディ), a pun on the English word. The app is named ytbplus after the first
-half of the title.
-
 ## Support
 
-ytbplus is free software I build in my own time, with no ads, no tracking and
-no paid tier. If it earns a place in your day, you can buy me a coffee at
-[saweria.co/latiefahmad](https://saweria.co/latiefahmad). Donations are a
-thank-you, not a subscription: nothing in the app is locked behind them, and
-they do not buy a say in the [non-goals](#non-goals).
+<p align="center">
+  <a href="https://saweria.co/latiefahmad"><img alt="Support ytbplus on Saweria" src="https://img.shields.io/badge/%E2%98%95%20Buy%20me%20a%20coffee-Saweria-e11d48?style=for-the-badge"></a>
+</p>
+
+ytbplus is free, with no ads, no tracking and no paid tier. If it earns a place
+in your day, you can support it at
+**[saweria.co/latiefahmad](https://saweria.co/latiefahmad)**. It is a
+thank-you, not a subscription: nothing is locked behind it, and it buys no say
+in the [non-goals](#non-goals).
+
+## The name
+
+ytbplus is built with [MyGO](https://github.com/egoist/mygo), and its name comes
+from one of MyGO!!!!!'s songs, [迷路日々](https://www.youtube.com/watch?v=STgVa-reZkM).
+The title is written with the characters for *ytbplus* (迷路, "maze") and *hibi*
+(日々, "days"), so it reads as "maze days" — but the song is pronounced
+"Melody" (メロディ), a pun on the English word. The app takes the first half.
 
 ## Credits
 
-- [MyGo](https://mygo.egoist.dev/) by [EGOIST](https://github.com/egoist),
-  the framework that draws ytbplus's native window and interface.
+- [MyGo](https://mygo.egoist.dev/) by [EGOIST](https://github.com/egoist), the
+  framework that draws ytbplus's native window and interface.
 - [ffmpeg](https://ffmpeg.org) decodes the audio,
   [yt-dlp](https://github.com/yt-dlp/yt-dlp) finds the streams, and
   [QuickJS](https://github.com/quickjs-ng/quickjs) runs the JavaScript yt-dlp
   needs to solve YouTube's challenges when Node or Bun is not installed. The
-  full build ships all three; the minimal build leaves them all to the system.
-  See
+  full build ships all three; the minimal build leaves them to the system. See
   [`resources/THIRD-PARTY-NOTICES.md`](resources/THIRD-PARTY-NOTICES.md).
-- [Google Sans](https://github.com/googlefonts/googlesans) sets the text,
-  under the SIL Open Font License (`fonts/OFL.txt`).
+- [Google Sans](https://github.com/googlefonts/googlesans) sets the text, under
+  the SIL Open Font License (`fonts/OFL.txt`).
 
 ## License
 
-ytbplus is free software, under the [GNU General Public License v3.0](LICENSE).
+ytbplus is free software under the [GNU General Public License v3.0](LICENSE).
 
 ytbplus is an independent project and is not affiliated with or endorsed by
 YouTube or Google.
