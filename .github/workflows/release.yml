@@ -257,7 +257,8 @@ jobs:
             echo "The MYGO_UPDATER_PRIVATE_KEY secret is not set; refusing to release without signed updates."
             exit 1
           }
-          key_bytes=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d 2>/dev/null | wc -c)
+          # wc pads its count on macOS, so compare numbers trimmed.
+          key_bytes=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d 2>/dev/null | wc -c | tr -d '[:space:]')
           test "$key_bytes" = 64 || {
             echo "MYGO_UPDATER_PRIVATE_KEY is $key_bytes bytes once decoded, but a private key is 64. A 32-byte value is the public key: paste mygo-update.key, not mygo-update.pub."
             exit 1
@@ -265,8 +266,8 @@ jobs:
           # The public half of the secret must be the key mygo.json bakes into
           # the app, or the build signs updates the app rejects.
           derived=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d \
-            | tail -c 32 | base64 | tr -d '\n')
-          want=$(jq -r .updates.publicKey mygo.json)
+            | tail -c 32 | base64 | tr -d '[:space:]')
+          want=$(jq -r .updates.publicKey mygo.json | tr -d '[:space:]')
           test "$derived" = "$want" || {
             echo "The public half of MYGO_UPDATER_PRIVATE_KEY ($derived) is not updates.publicKey in mygo.json ($want)."
             exit 1
