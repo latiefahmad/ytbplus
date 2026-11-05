@@ -1,33 +1,1029 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
-import Hero from "../components/Hero.astro";
-import Memory from "../components/Memory.astro";
-import Gone from "../components/Gone.astro";
-import Screens from "../components/Screens.astro";
-import Colour from "../components/Colour.astro";
-import Details from "../components/Details.astro";
-import Download from "../components/Download.astro";
-import Footer from "../components/Footer.astro";
+import {
+  version,
+  tag,
+  repo,
+  releases,
+  asset,
+  platforms,
+  changelog,
+} from "../data/releases";
+
+// GitHub Pages serves the site from a subpath, so asset URLs carry it.
+const base = import.meta.env.BASE_URL;
+const url = (path: string) => `${base}${path}`.replace(/\/{2,}/g, "/");
+const site = new URL(base, import.meta.env.SITE).href;
+
+const nav = [
+  { href: "#features", label: "Features" },
+  { href: "#download", label: "Download" },
+  { href: "#changelog", label: "Changelog" },
+  { href: "#faq", label: "FAQ" },
+];
+
+const heroShots = [
+  { src: url("/assets/screens/home.webp"), alt: "The Home screen, with Listen again and Forgotten favorites", label: "Home" },
+  { src: url("/assets/screens/lyrics.webp"), alt: "The player with synced lyrics and the sung line lit", label: "Lyrics" },
+];
+
+const features = [
+  {
+    title: "Native, not a browser tab",
+    body: "ytbplus draws its own window instead of loading the YouTube Music web page. It idles at about 100 MB of memory, where the site in a tab takes 600 to 800.",
+    icon: "gauge",
+  },
+  {
+    title: "Lyrics that keep up",
+    body: "Word-synced lyrics light each word as it is sung, from Better Lyrics, YouTube Music or LRCLIB. Switch to plain text when you prefer it.",
+    icon: "lyrics",
+  },
+  {
+    title: "Colours from the artwork",
+    body: "The whole interface takes its palette from the album art of the song playing. Matugen can take over, so ytbplus matches the rest of your desktop.",
+    icon: "palette",
+  },
+  {
+    title: "Your account, your library",
+    body: "Sign in with the browser you already use, never an email or password. Like songs, follow artists, save albums, and sort or search your own playlists.",
+    icon: "library",
+  },
+  {
+    title: "Last.fm, stats and Discord",
+    body: "Scrobble as you listen and pause it any time. See your listening time by day, kept on your computer, and show the current track on Discord.",
+    icon: "pulse",
+  },
+  {
+    title: "An equaliser that sounds good",
+    body: "Ten bands with presets and volume levelling, so quiet tracks and loud ones play at a similar level without you reaching for the volume.",
+    icon: "sliders",
+  },
+];
+
+const faq = [
+  {
+    q: "Is ytbplus official?",
+    a: "No. ytbplus is an independent project, not made, endorsed or supported by YouTube or Google. It uses YouTube's private web interfaces, which YouTube can change at any time.",
+  },
+  {
+    q: "What happens when YouTube changes something?",
+    a: "Browsing, playback or sign-in can stop working until a new release ships. The app checks for updates once a day, and you can update by hand from the releases page.",
+  },
+  {
+    q: "Do I need an account?",
+    a: "No. Browsing and playback work without signing in. Signing in adds your personalised Home feed and Library.",
+  },
+  {
+    q: "What is a minimal build?",
+    a: "The full build bundles ffmpeg, yt-dlp and QuickJS. The minimal build uses the ffmpeg, yt-dlp and Node.js or Bun already on your system, for a smaller download.",
+  },
+  {
+    q: "Is it really free?",
+    a: "Yes, under the GNU General Public License v3.0. There are no ads, no tracking and no paid tier. Donations are a thank-you, never a subscription.",
+  },
+];
+
+const kindLabel = { Added: "Added", Changed: "Changed", Fixed: "Fixed", Removed: "Removed" } as const;
+
+const icons: Record<string, string> = {
+  gauge: '<path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="m14.1 11.9 3.9-3.9"/><path d="M20.2 16.6A8 8 0 1 0 3.8 16.6"/>',
+  lyrics: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3.1A8.9 8.9 0 0 0 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="14.5" cy="7.5" r="1"/>',
+  library: '<path d="M4 5v14"/><path d="M9 4v16"/><rect x="13" y="4" width="7" height="16" rx="1.5"/>',
+  pulse: '<path d="M3 12h4l2.5-7 4 14L16 12h5"/>',
+  sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h9M17 18h3"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/>',
+};
 ---
 
-<Layout>
-  <a class="absolute top-0 -left-[9999px] z-100 rounded-br-[14px] bg-bg-soft px-4.5 py-3 focus:left-0" href="#main">Skip to content</a>
-  <Header />
-  <main id="main">
-    <Hero />
-    <Memory />
-    <Gone />
-    <Screens />
-    <Colour />
-    <Details />
-    <Download />
-  </main>
-  <Footer />
-</Layout>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ytbplus · YouTube Music, without the bloat</title>
+    <meta
+      name="description"
+      content="A free, native desktop player for YouTube Music. About 100 MB of memory, no ads, synced lyrics and colours from the album art. For macOS, Windows and Linux."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#fbf7f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141011" media="(prefers-color-scheme: dark)" />
+    <link rel="canonical" href={site} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={site} />
+    <meta property="og:title" content="ytbplus · YouTube Music, without the bloat" />
+    <meta
+      property="og:description"
+      content="A free, native desktop player for YouTube Music. About 100 MB of memory, no ads, synced lyrics."
+    />
+    <meta property="og:image" content={url("/assets/og.jpg")} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href={url("/favicon.ico")} sizes="48x48" />
+    <link rel="icon" href={url("/assets/brand/icon.svg")} type="image/svg+xml" />
+    <link rel="icon" href={url("/assets/favicon-64.png")} sizes="64x64" type="image/png" />
+    <link rel="apple-touch-icon" href={url("/assets/apple-touch-icon.png")} />
+    <link rel="manifest" href={url("/site.webmanifest")} />
+    <link rel="preload" href={url("/assets/fonts/GoogleSans.woff2")} as="font" type="font/woff2" crossorigin />
+    <style is:inline set:html={`@font-face{font-family:"Google Sans";font-weight:100 900;font-display:swap;src:url("${url("/assets/fonts/GoogleSans.woff2")}") format("woff2")}`}></style>
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        var stored;
+        try { stored = localStorage.getItem("ytbplus-theme"); } catch (e) {}
+        var dark = stored === "dark" || (stored !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        root.dataset.theme = dark ? "dark" : "light";
+        root.classList.add("js");
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
 
-<script>
-  import { arrive } from "../scripts/arrive";
+    <header class="site-head">
+      <div class="wrap head-inner">
+        <a class="brand" href={base} aria-label="ytbplus home">
+          <img src={url("/assets/brand/icon.svg")} alt="" width="30" height="30" />
+          <span>ytbplus</span>
+        </a>
+        <nav aria-label="Sections">
+          {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+        </nav>
+        <a class="btn btn-ghost head-cta" href="#download">Download</a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="sun"
+            ><circle cx="12" cy="12" r="4"></circle><path
+              d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+            ></path></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="moon"
+            ><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"></path></svg>
+        </button>
+      </div>
+    </header>
 
-  arrive(".reveal");
-</script>
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="wrap hero-inner">
+          <p class="eyebrow">
+            <span class="dot" aria-hidden="true"></span>
+            Version {version}
+            <a class="eyebrow-link" href="#changelog">What changed</a>
+          </p>
+          <h1 id="hero-title">
+            YouTube Music,<br />
+            <em>without the bloat.</em>
+          </h1>
+          <p class="lede">
+            A native desktop player that draws its own window instead of loading
+            the web page. About 100 MB of memory, no ads, synced lyrics, and
+            colours taken from the album art.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#download" data-hero-download>Download ytbplus</a>
+            <a class="btn btn-ghost" href={repo}>
+              <svg viewBox="0 0 16 16" aria-hidden="true" width="16" height="16"
+                ><path
+                  fill="currentColor"
+                  d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.5-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+                ></path></svg
+              >
+              Source
+            </a>
+          </div>
+
+          <ul class="chips">
+            <li>~100 MB memory</li>
+            <li>No ads</li>
+            <li>Synced lyrics</li>
+            <li>Last.fm</li>
+            <li>Free and open source</li>
+          </ul>
+
+          <div class="hero-shot">
+            <figure class="shot-main">
+              <img
+                src={heroShots[1].src}
+                alt={heroShots[1].alt}
+                width="1440"
+                height="916"
+                fetchpriority="high"
+              />
+            </figure>
+            <figure class="shot-back">
+              <img src={heroShots[0].src} alt={heroShots[0].alt} width="1440" height="888" loading="lazy" />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="compare" aria-labelledby="compare-title">
+        <div class="wrap">
+          <h2 id="compare-title" class="sr-only">ytbplus compared with the browser</h2>
+          <div class="compare-card">
+            <div class="compare-head">
+              <span></span>
+              <span class="c-ytb">ytbplus</span>
+              <span class="c-web">In a browser tab</span>
+            </div>
+            {[
+              ["Memory", "~100 MB", "600–800 MB"],
+              ["Ads from the web page", "none", "shown"],
+              ["Synced lyrics", "built in", "limited"],
+              ["Colours from the album art", "built in", "—"],
+              ["Last.fm scrobbling", "built in", "extension"],
+            ].map(([label, a, b]) => (
+              <div class="compare-row">
+                <span class="c-label">{label}</span>
+                <span class="c-ytb">{a}</span>
+                <span class="c-web">{b}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="features" id="features" aria-labelledby="features-title">
+        <div class="wrap">
+          <p class="kicker">Features</p>
+          <h2 id="features-title">Everything the web app is missing,<br />and a tenth of the memory.</h2>
+          <div class="feature-grid">
+            {features.map((f) => (
+              <article class="feature">
+                <span class="feature-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" set:html={icons[f.icon]}></svg>
+                </span>
+                <h3>{f.title}</h3>
+                <p>{f.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="shots" aria-labelledby="shots-title">
+        <div class="wrap">
+          <p class="kicker">A look inside</p>
+          <h2 id="shots-title">Built on Material 3 Expressive.</h2>
+          <div class="shot-grid">
+            <figure>
+              <img src={url("/assets/screens/home.webp")} alt="The Home screen" width="1440" height="888" loading="lazy" />
+              <figcaption>Home, with your recommendations and recent favourites.</figcaption>
+            </figure>
+            <figure>
+              <img src={url("/assets/screens/library.webp")} alt="The Library screen" width="1440" height="888" loading="lazy" />
+              <figcaption>Your library: liked songs, artists, albums and playlists.</figcaption>
+            </figure>
+            <figure>
+              <img src={url("/assets/screens/stats.webp")} alt="The listening stats screen" width="1440" height="888" loading="lazy" />
+              <figcaption>Listening time by day, kept on your own computer.</figcaption>
+            </figure>
+            <figure>
+              <img src={url("/assets/screens/search.webp")} alt="The search screen" width="1440" height="888" loading="lazy" />
+              <figcaption>Search songs, albums, artists and podcasts, with filters.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="download" id="download" aria-labelledby="download-title">
+        <div class="wrap">
+          <p class="kicker">Download</p>
+          <h2 id="download-title">Get ytbplus {version}</h2>
+          <p class="section-lede">
+            Free and open source. Every build is made by CI from the source on
+            GitHub, so you can check what you run.
+          </p>
+
+          <div class="dl-list" data-platforms>
+            {platforms.map((p, index) => (
+              <article class="dl-card" data-platform={p.id} style={`--i:${index}`}>
+                <div class="dl-main">
+                  <header>
+                    <span class="dl-os" aria-hidden="true">
+                      {p.id === "mac" && (
+                        <svg viewBox="0 0 24 24"
+                          ><path
+                            d="M16.4 12.7c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.7-1.3-.1-2.5.8-3.2.8-.7 0-1.7-.8-2.8-.8-1.4 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.5 2.2 2.6 2.1 1-.04 1.4-.7 2.7-.7s1.6.7 2.7.6c1.1-.02 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4-.02-.01-2.1-.8-2.1-3.3ZM14.4 6.3c.6-.7 1-1.7.9-2.7-.8.03-1.9.6-2.5 1.3-.5.6-1 1.6-.9 2.6.9.07 1.9-.5 2.5-1.2Z"
+                          ></path></svg
+                        >
+                      )}
+                      {p.id === "win" && (
+                        <svg viewBox="0 0 24 24"
+                          ><path d="M3 5.6 10.3 4.6v7H3V5.6Zm0 12.8 7.3 1v-6.9H3v5.9Zm8.2 1.1L21 21V12.7h-9.8v6.8Zm0-15v6.9H21V3l-9.8 1.5Z"
+                          ></path></svg
+                        >
+                      )}
+                      {p.id === "linux" && (
+                        <svg viewBox="0 0 24 24"
+                          ><path
+                            d="M12 2.5c-2 0-3.1 1.7-3 3.7.06 1.3-.1 2.5-.8 3.7-.5.9-1.2 1.8-1.6 2.9-.4 1.1-.3 2.4.2 3.4.4.9 1.1 1.6 1.4 2.5.3.9.9 1.5 1.9 1.6 1.6.2 3.2.2 4.8 0 1-.1 1.6-.7 1.9-1.6.3-.9 1-1.6 1.4-2.5.5-1 .6-2.3.2-3.4-.4-1.1-1.1-2-1.6-2.9-.7-1.2-.9-2.4-.8-3.7.1-2-1-3.7-3-3.7Z"
+                          ></path><ellipse cx="10.3" cy="7.4" rx=".8" ry="1.1" fill="var(--card-ink)"
+                          ></ellipse><ellipse cx="13.7" cy="7.4" rx=".8" ry="1.1" fill="var(--card-ink)"
+                          ></ellipse></svg
+                        >
+                      )}
+                    </span>
+                    <div class="dl-title">
+                      <h3>{p.name}</h3>
+                      <p>{p.note}</p>
+                    </div>
+                    <span class="dl-badge" data-badge hidden>Your system</span>
+                  </header>
+
+                  <a class="btn btn-primary dl-btn" href={asset(p.primary.file)} data-primary>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" class="dl-icon"
+                      ><path d="M12 3v11M7.5 10.5 12 15l4.5-4.5M5 19h14"></path></svg>
+                    <span>{p.primary.label}</span>
+                    <small>{p.primary.hint}</small>
+                  </a>
+
+                  <ul class="dl-others">
+                    {p.others.map((o) => (
+                      <li><a href={asset(o.file)}>{o.label}</a></li>
+                    ))}
+                  </ul>
+                </div>
+
+                <ol class="dl-steps">
+                  {p.steps.map((s) => <li>{s}</li>)}
+                </ol>
+              </article>
+            ))}
+          </div>
+
+          <p class="dl-foot">
+            Every release also has full and minimal builds, plus a{" "}
+            <a href={`${releases}/tag/${tag}`}>checksums file</a> to verify the
+            download. Old versions stay on the <a href={releases}>releases page</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="changelog" id="changelog" aria-labelledby="changelog-title">
+        <div class="wrap">
+          <p class="kicker">Changelog</p>
+          <h2 id="changelog-title">What changed</h2>
+          <p class="section-lede">
+            The current release is <strong>{version}</strong>. Read the{" "}
+            <a href={`${repo}/blob/main/CHANGELOG.md`}>full changelog</a> for
+            every detail.
+          </p>
+
+          <ol class="log">
+            {changelog.map((entry, i) => (
+              <li class:list={["log-entry", { current: i === 0 }]}>
+                <div class="log-head">
+                  <h3>
+                    {entry.version}
+                    {i === 0 && <span class="tag-current">Current</span>}
+                  </h3>
+                  <time>{entry.date}</time>
+                </div>
+                {entry.changes.map((group) => (
+                  <div class="log-group">
+                    <span class:list={["kind", `kind-${group.kind.toLowerCase()}`]}>
+                      {kindLabel[group.kind]}
+                    </span>
+                    <ul>
+                      {group.items.map((item) => <li>{item}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section class="support" aria-labelledby="support-title">
+        <div class="wrap">
+          <div class="support-card">
+            <div>
+              <p class="kicker">Support</p>
+              <h2 id="support-title">If it earns a place in your day.</h2>
+              <p>
+                ytbplus is free: no ads, no tracking, no paid tier. If it saves
+                you a browser tab, you can buy me a coffee. It is a thank-you,
+                not a subscription — nothing is locked behind it.
+              </p>
+            </div>
+            <a class="btn btn-saweria" href="https://saweria.co/latiefahmad">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="coffee"
+                ><path
+                  d="M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"></path><path d="M16 9h1.5a2.5 2.5 0 0 1 0 5H16"></path><path
+                  d="M6.5 3.5c0 .8.9.8.9 1.6M10 3.5c0 .8.9.8.9 1.6M13.5 3.5c0 .8.9.8.9 1.6"
+                ></path></svg>
+              <span>Buy me a coffee<small>saweria.co/latiefahmad</small></span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="faq" id="faq" aria-labelledby="faq-title">
+        <div class="wrap">
+          <p class="kicker">Questions</p>
+          <h2 id="faq-title">Good to know</h2>
+          <div class="faq-list">
+            {faq.map((item) => (
+              <details>
+                <summary>{item.q}</summary>
+                <p>{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap foot-inner">
+        <div class="foot-brand">
+          <img src={url("/assets/brand/icon.svg")} alt="" width="26" height="26" />
+          <div>
+            <strong>ytbplus</strong>
+            <p>A native desktop player for YouTube Music.</p>
+          </div>
+        </div>
+        <nav aria-label="Footer">
+          <a href={repo}>GitHub</a>
+          <a href={releases}>Releases</a>
+          <a href={`${repo}/blob/main/CHANGELOG.md`}>Changelog</a>
+          <a href={`${repo}/blob/main/LICENSE`}>License</a>
+          <a href="https://saweria.co/latiefahmad">Saweria</a>
+        </nav>
+      </div>
+      <div class="wrap foot-legal">
+        <p>
+          ytbplus is an independent project, not affiliated with or endorsed by
+          YouTube or Google. Free software under the GPL-3.0.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      /* Theme: follow the system until the visitor picks one. */
+      const root = document.documentElement;
+
+      document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+        localStorage.setItem("ytbplus-theme", root.dataset.theme);
+      });
+
+      /* Put the visitor's own platform first and label it. */
+      function detectOS() {
+        const nav = navigator;
+        const platform = nav.userAgentData?.platform || navigator.platform || "";
+        const agent = navigator.userAgent || "";
+        if (/mac/i.test(platform) || /Mac OS X/.test(agent)) return "mac";
+        if (/win/i.test(platform) || /Windows/.test(agent)) return "win";
+        if (/linux|x11/i.test(platform) || /Linux|Android/.test(agent)) return "linux";
+        return null;
+      }
+
+      const os = detectOS();
+      if (os) {
+        const card = document.querySelector(`[data-platform="${os}"]`);
+        if (card) {
+          card.classList.add("is-yours");
+          card.querySelector("[data-badge]")?.removeAttribute("hidden");
+          card.parentElement?.prepend(card);
+          const label = card.querySelector("[data-primary] span");
+          if (label) label.textContent = `Download for ${card.querySelector("h3").textContent}`;
+        }
+        const hero = document.querySelector("[data-hero-download]");
+        if (hero) hero.textContent = `Download for ${{ mac: "macOS", win: "Windows", linux: "Linux" }[os]}`;
+      }
+
+      /* Reveal sections as they come into view. */
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reduce) {
+        const targets = document.querySelectorAll(".feature, .shot-grid figure, .dl-card, .log-entry");
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in");
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { rootMargin: "0px 0px -10% 0px" },
+        );
+        for (const target of targets) io.observe(target);
+      }
+    </script>
+
+    <style is:global>
+      /* ---------- tokens ---------- */
+      :root {
+        --bg: #fbf7f5;
+        --card: #ffffff;
+        --card-ink: #ffffff;
+        --soft: #f4ecea;
+        --line: #e6dcd9;
+        --ink: #1a1415;
+        --muted: #6b5f5e;
+        --red: #e11d48;
+        --red-deep: #b01234;
+        --red-ink: #ffffff;
+        --glow-a: #ffd9e2;
+        --glow-b: #d9e6ff;
+        --saweria: #f8b600;
+        --shadow-card: 0 1px 2px rgb(26 20 21 / 0.05), 0 18px 40px -28px rgb(26 20 21 / 0.35);
+        --shadow-shot: 0 30px 80px -40px rgb(80 20 40 / 0.45), 0 8px 24px -16px rgb(26 20 21 / 0.3);
+        --radius: 22px;
+        --radius-lg: 30px;
+        --head: 68px;
+        --font: "Google Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      html[data-theme="dark"] {
+        --bg: #141011;
+        --card: #1d1618;
+        --card-ink: #1d1618;
+        --soft: #241b1e;
+        --line: #352a2d;
+        --ink: #f7efed;
+        --muted: #a99b99;
+        --red: #ff5c78;
+        --red-deep: #e11d48;
+        --red-ink: #2a0a12;
+        --glow-a: #4a1626;
+        --glow-b: #1b2547;
+        --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 18px 40px -28px rgb(0 0 0 / 0.7);
+        --shadow-shot: 0 30px 80px -40px rgb(0 0 0 / 0.8), 0 8px 24px -16px rgb(0 0 0 / 0.6);
+      }
+
+      @font-face {
+        font-family: "Google Sans";
+        font-weight: 100 900;
+        font-display: swap;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; scroll-padding-top: calc(var(--head) + 20px); }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font);
+        font-size: 17px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      img, svg { display: block; max-width: 100%; }
+      h1, h2, h3, p, ul, ol, figure { margin: 0; padding: 0; }
+      ul, ol { list-style: none; }
+      a { color: inherit; }
+      button { font: inherit; color: inherit; }
+      :focus-visible { outline: 2px solid var(--red); outline-offset: 3px; border-radius: 8px; }
+      ::selection { background: var(--red); color: var(--red-ink); }
+      .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+      }
+      .skip {
+        position: absolute; left: -9999px; top: 0; z-index: 100;
+        background: var(--card); padding: 12px 18px; border-radius: 0 0 12px 0;
+      }
+      .skip:focus { left: 0; }
+
+      .wrap { width: min(1180px, calc(100% - 44px)); margin-inline: auto; }
+
+      /* ---------- buttons ---------- */
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+        padding: 13px 24px;
+        border-radius: 999px;
+        font-size: 16px; font-weight: 600;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease,
+          transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.2s ease;
+      }
+      .btn-primary {
+        background: var(--red); color: var(--red-ink);
+        box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--red) 70%, transparent);
+      }
+      .btn-primary:hover { background: var(--red-deep); transform: translateY(-1px); }
+      html[data-theme="dark"] .btn-primary:hover { background: #ff7389; }
+      .btn-ghost {
+        background: color-mix(in srgb, var(--card) 70%, transparent);
+        border-color: var(--line); color: var(--ink);
+      }
+      .btn-ghost:hover { background: var(--soft); }
+      .btn-saweria {
+        background: var(--saweria); color: #2a1c00; gap: 12px;
+        padding: 15px 26px; flex-shrink: 0;
+        box-shadow: 0 12px 30px -16px rgb(248 182 0 / 0.9);
+      }
+      .btn-saweria:hover { background: #ffc633; transform: translateY(-1px); }
+      .btn-saweria span { display: grid; text-align: left; line-height: 1.25; font-size: 16px; }
+      .btn-saweria small { font-weight: 500; opacity: 0.72; font-size: 12.5px; }
+      .coffee { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+
+      /* ---------- header ---------- */
+      .site-head {
+        position: sticky; top: 0; z-index: 50;
+        backdrop-filter: blur(14px);
+        background: color-mix(in srgb, var(--bg) 82%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+      }
+      .head-inner { display: flex; align-items: center; gap: 10px; height: var(--head); }
+      .brand {
+        display: flex; align-items: center; gap: 9px;
+        font-weight: 700; font-size: 19px; letter-spacing: -0.02em;
+        text-decoration: none; margin-right: auto;
+      }
+      .head-inner nav { display: flex; gap: 4px; }
+      .head-inner nav a {
+        padding: 8px 13px; border-radius: 999px;
+        font-size: 15px; font-weight: 500; text-decoration: none; color: var(--muted);
+        transition: color 0.2s ease, background-color 0.2s ease;
+      }
+      .head-inner nav a:hover { color: var(--ink); background: var(--soft); }
+      .head-cta { padding: 9px 18px; font-size: 15px; }
+      .theme-toggle {
+        display: grid; place-items: center;
+        width: 38px; height: 38px; flex-shrink: 0;
+        border-radius: 999px; border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--card) 70%, transparent);
+        cursor: pointer;
+      }
+      .theme-toggle:hover { background: var(--soft); }
+      .theme-toggle svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+      .theme-toggle .moon { display: none; }
+      html[data-theme="dark"] .theme-toggle .sun { display: none; }
+      html[data-theme="dark"] .theme-toggle .moon { display: block; }
+
+      /* ---------- hero ---------- */
+      .hero { position: relative; padding: clamp(46px, 7vw, 92px) 0 0; overflow: hidden; }
+      .hero-glow {
+        position: absolute; inset: -20% -10% auto; height: 720px; z-index: -1;
+        background:
+          radial-gradient(46% 52% at 26% 30%, var(--glow-a), transparent 70%),
+          radial-gradient(44% 50% at 78% 22%, var(--glow-b), transparent 72%);
+        filter: blur(6px);
+        opacity: 0.95;
+      }
+      .hero-inner { text-align: center; display: grid; justify-items: center; }
+      .eyebrow {
+        display: inline-flex; align-items: center; gap: 9px;
+        padding: 6px 8px 6px 13px; margin-bottom: 26px;
+        border-radius: 999px; border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--card) 75%, transparent);
+        font-size: 13.5px; font-weight: 600; color: var(--muted);
+      }
+      .eyebrow .dot {
+        width: 7px; height: 7px; border-radius: 50%; background: #22c55e;
+        box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 22%, transparent);
+      }
+      .eyebrow-link {
+        text-decoration: none; padding: 4px 11px; border-radius: 999px;
+        background: var(--soft); color: var(--ink);
+      }
+      .eyebrow-link:hover { background: var(--line); }
+      .hero h1 {
+        font-size: clamp(42px, 7.4vw, 88px);
+        line-height: 0.98;
+        letter-spacing: -0.045em;
+        font-weight: 600;
+        margin-bottom: 22px;
+      }
+      .hero h1 em {
+        font-style: normal;
+        background: linear-gradient(96deg, var(--red) 10%, #ff8aa0 60%, #f9a8c4 100%);
+        -webkit-background-clip: text; background-clip: text;
+        color: transparent;
+      }
+      .lede {
+        max-width: 60ch; font-size: clamp(17px, 1.6vw, 20px);
+        color: var(--muted); margin-bottom: 30px;
+      }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+      .chips {
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+        margin: 30px 0 0;
+      }
+      .chips li {
+        padding: 7px 15px; border-radius: 999px; border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--card) 70%, transparent);
+        font-size: 13.5px; font-weight: 500; color: var(--muted);
+      }
+      .hero-shot {
+        position: relative; width: min(980px, 100%);
+        margin: clamp(40px, 6vw, 72px) 0 -2px;
+      }
+      .hero-shot figure { margin: 0; }
+      .shot-main {
+        position: relative; z-index: 2;
+        border-radius: 16px; overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+        box-shadow: var(--shadow-shot);
+        background: var(--card);
+      }
+      .shot-back {
+        position: absolute; z-index: 1; left: 50%; top: -26px;
+        width: 74%; translate: -50% 0;
+        border-radius: 14px; overflow: hidden; opacity: 0.55;
+        filter: saturate(0.85);
+      }
+      .shot-back img { width: 100%; }
+
+      /* ---------- compare ---------- */
+      .compare { padding: clamp(64px, 8vw, 104px) 0 0; }
+      .compare-card {
+        border-radius: var(--radius-lg); overflow: hidden;
+        border: 1px solid var(--line); background: var(--card);
+        box-shadow: var(--shadow-card);
+      }
+      .compare-head, .compare-row {
+        display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center; gap: 12px;
+        padding: 15px clamp(16px, 3vw, 30px);
+      }
+      .compare-head {
+        font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+        color: var(--muted); font-weight: 600;
+        background: var(--soft);
+        border-bottom: 1px solid var(--line);
+      }
+      .compare-row + .compare-row { border-top: 1px solid var(--line); }
+      .compare-row .c-label { font-weight: 500; }
+      .compare-head .c-ytb, .compare-row .c-ytb {
+        font-weight: 600; color: var(--red);
+      }
+      .compare-head .c-web, .compare-row .c-web { color: var(--muted); font-size: 15.5px; }
+      .compare-head .c-ytb, .compare-head .c-web { font-size: 13px; }
+
+      /* ---------- sections ---------- */
+      .features, .shots, .download, .changelog, .support, .faq {
+        padding: clamp(72px, 9vw, 128px) 0 0;
+      }
+      .kicker {
+        font-size: 13px; font-weight: 700; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--red); margin-bottom: 14px;
+      }
+      .features h2, .shots h2, .download h2, .changelog h2, .support-card h2, .faq h2 {
+        font-size: clamp(30px, 4.2vw, 52px);
+        line-height: 1.06; letter-spacing: -0.035em; font-weight: 600;
+        margin-bottom: 16px;
+      }
+      .section-lede { max-width: 62ch; color: var(--muted); font-size: 18px; }
+      .section-lede a { color: var(--red); text-underline-offset: 3px; }
+
+      .feature-grid {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px; margin-top: 42px;
+      }
+      .feature {
+        padding: 26px 24px 28px; border-radius: var(--radius);
+        border: 1px solid var(--line); background: var(--card);
+        transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.3s ease;
+      }
+      .feature:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+      .feature-icon {
+        display: grid; place-items: center;
+        width: 42px; height: 42px; margin-bottom: 18px;
+        border-radius: 13px;
+        background: color-mix(in srgb, var(--red) 12%, transparent);
+        color: var(--red);
+      }
+      .feature-icon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .feature h3 { font-size: 18px; letter-spacing: -0.015em; margin-bottom: 8px; }
+      .feature p { color: var(--muted); font-size: 15.5px; line-height: 1.6; }
+
+      .shot-grid {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px; margin-top: 40px;
+      }
+      .shot-grid figure {
+        border-radius: var(--radius); overflow: hidden;
+        border: 1px solid var(--line); background: var(--card);
+        box-shadow: var(--shadow-card);
+      }
+      .shot-grid img { width: 100%; }
+      .shot-grid figcaption {
+        padding: 13px 18px; font-size: 14px; color: var(--muted);
+        border-top: 1px solid var(--line);
+      }
+
+      /* ---------- download ---------- */
+      .dl-list { display: grid; gap: 14px; margin-top: 38px; }
+      .dl-card {
+        display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: clamp(20px, 4vw, 48px);
+        padding: clamp(22px, 3vw, 32px);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--line); background: var(--card);
+        box-shadow: var(--shadow-card);
+        transition: border-color 0.3s ease;
+      }
+      .dl-card.is-yours {
+        border-color: color-mix(in srgb, var(--red) 45%, var(--line));
+        box-shadow: var(--shadow-card), 0 0 0 1px color-mix(in srgb, var(--red) 30%, transparent);
+      }
+      .dl-main header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+      .dl-os {
+        display: grid; place-items: center; width: 46px; height: 46px;
+        border-radius: 14px; background: var(--soft); flex-shrink: 0;
+      }
+      .dl-os svg { width: 23px; height: 23px; fill: var(--ink); }
+      .dl-title h3 { font-size: 22px; letter-spacing: -0.02em; }
+      .dl-title p { font-size: 14px; color: var(--muted); line-height: 1.4; }
+      .dl-badge {
+        margin-left: auto; padding: 5px 12px; border-radius: 999px;
+        background: color-mix(in srgb, var(--red) 13%, transparent);
+        color: var(--red); font-size: 12px; font-weight: 700;
+        letter-spacing: 0.02em; white-space: nowrap;
+      }
+      .dl-btn { width: 100%; flex-direction: row; gap: 10px; padding: 14px 20px; }
+      .dl-btn span { font-weight: 600; }
+      .dl-btn small {
+        font-weight: 500; font-size: 12.5px; opacity: 0.75;
+        padding-left: 10px; border-left: 1px solid color-mix(in srgb, var(--red-ink) 25%, transparent);
+      }
+      .dl-icon {
+        width: 19px; height: 19px; fill: none; stroke: currentColor;
+        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+      }
+      .dl-others {
+        display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px;
+      }
+      .dl-others a {
+        display: inline-block; padding: 6px 13px; border-radius: 999px;
+        border: 1px solid var(--line); background: var(--bg);
+        font-size: 13.5px; font-weight: 500; text-decoration: none; color: var(--muted);
+        transition: color 0.2s ease, border-color 0.2s ease;
+      }
+      .dl-others a:hover { color: var(--ink); border-color: var(--muted); }
+      .dl-steps {
+        display: grid; gap: 12px; align-content: center;
+        padding-left: 0; counter-reset: step;
+      }
+      .dl-steps li {
+        position: relative; padding-left: 38px;
+        font-size: 15px; color: var(--muted); line-height: 1.5;
+        counter-increment: step;
+      }
+      .dl-steps li::before {
+        content: counter(step);
+        position: absolute; left: 0; top: 0;
+        display: grid; place-items: center;
+        width: 25px; height: 25px; border-radius: 50%;
+        background: var(--soft); color: var(--ink);
+        font-size: 12.5px; font-weight: 700;
+      }
+      .dl-foot {
+        margin-top: 22px; font-size: 14.5px; color: var(--muted); max-width: 74ch;
+      }
+      .dl-foot a { color: var(--red); }
+
+      /* ---------- changelog ---------- */
+      .log { margin-top: 38px; display: grid; gap: 0; }
+      .log-entry {
+        position: relative;
+        padding: 26px clamp(0px, 2vw, 26px) 26px clamp(22px, 3vw, 30px);
+        border-left: 2px solid var(--line);
+      }
+      .log-entry.current { border-left-color: var(--red); }
+      .log-entry:last-child { padding-bottom: 0; }
+      .log-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+      .log-head h3 {
+        font-size: 24px; letter-spacing: -0.02em; font-weight: 600;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .log-head h3::before {
+        content: ""; position: absolute; left: -7px;
+        width: 12px; height: 12px; border-radius: 50%;
+        background: var(--bg); border: 2px solid var(--line);
+      }
+      .log-entry.current .log-head h3::before { background: var(--red); border-color: var(--red); }
+      .log-head time { font-size: 14px; color: var(--muted); }
+      .tag-current {
+        padding: 3px 10px; border-radius: 999px;
+        background: color-mix(in srgb, var(--red) 13%, transparent);
+        color: var(--red); font-size: 11.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .log-group { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; margin-top: 12px; }
+      .kind {
+        align-self: start; padding: 3px 10px; border-radius: 7px;
+        font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.05em; text-align: center;
+      }
+      .kind-added { background: color-mix(in srgb, #22c55e 16%, transparent); color: #15803d; }
+      .kind-changed { background: color-mix(in srgb, #3b82f6 16%, transparent); color: #1d4ed8; }
+      .kind-fixed { background: color-mix(in srgb, #f59e0b 20%, transparent); color: #b45309; }
+      .kind-removed { background: color-mix(in srgb, #ef4444 16%, transparent); color: #b91c1c; }
+      html[data-theme="dark"] .kind-added { color: #4ade80; }
+      html[data-theme="dark"] .kind-changed { color: #93c5fd; }
+      html[data-theme="dark"] .kind-fixed { color: #fbbf24; }
+      html[data-theme="dark"] .kind-removed { color: #fca5a5; }
+      .log-group ul { display: grid; gap: 9px; }
+      .log-group li { color: var(--muted); font-size: 15.5px; line-height: 1.6; }
+
+      /* ---------- support ---------- */
+      .support-card {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center; gap: clamp(24px, 4vw, 48px);
+        padding: clamp(30px, 4.5vw, 52px);
+        border-radius: var(--radius-lg);
+        background:
+          radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--saweria) 16%, transparent), transparent 60%),
+          var(--card);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-card);
+      }
+      .support-card h2 { font-size: clamp(26px, 3.4vw, 42px); }
+      .support-card p { color: var(--muted); max-width: 56ch; margin-top: 10px; }
+
+      /* ---------- faq ---------- */
+      .faq-list { margin-top: 34px; display: grid; gap: 10px; max-width: 880px; }
+      .faq-list details {
+        border: 1px solid var(--line); border-radius: 16px;
+        background: var(--card); overflow: hidden;
+        transition: border-color 0.2s ease;
+      }
+      .faq-list details[open] { border-color: color-mix(in srgb, var(--red) 35%, var(--line)); }
+      .faq-list summary {
+        cursor: pointer; list-style: none;
+        padding: 17px 20px; font-weight: 600; font-size: 16.5px;
+        display: flex; justify-content: space-between; gap: 16px; align-items: center;
+      }
+      .faq-list summary::-webkit-details-marker { display: none; }
+      .faq-list summary::after {
+        content: "+"; font-size: 22px; font-weight: 400; color: var(--muted);
+        transition: transform 0.25s ease; line-height: 1;
+      }
+      .faq-list details[open] summary::after { transform: rotate(45deg); }
+      .faq-list p { padding: 0 20px 18px; color: var(--muted); font-size: 15.5px; }
+
+      /* ---------- footer ---------- */
+      .site-foot {
+        margin-top: clamp(80px, 10vw, 140px);
+        padding: 46px 0 40px;
+        border-top: 1px solid var(--line);
+        background: var(--soft);
+      }
+      .foot-inner {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        gap: 28px; flex-wrap: wrap;
+      }
+      .foot-brand { display: flex; gap: 12px; align-items: flex-start; }
+      .foot-brand strong { font-size: 17px; }
+      .foot-brand p { font-size: 14px; color: var(--muted); }
+      .foot-inner nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+      .foot-inner nav a { font-size: 14.5px; color: var(--muted); text-decoration: none; }
+      .foot-inner nav a:hover { color: var(--ink); text-decoration: underline; }
+      .foot-legal { margin-top: 34px; }
+      .foot-legal p { font-size: 13px; color: var(--muted); max-width: 80ch; }
+
+      /* ---------- reveal ---------- */
+      .feature, .shot-grid figure, .log-entry {
+        opacity: 1;
+      }
+      .js .feature, .js .shot-grid figure, .js .log-entry {
+        opacity: 0; transform: translateY(18px);
+        transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      .js .feature.in, .js .shot-grid figure.in, .js .log-entry.in { opacity: 1; transform: none; }
+
+      /* ---------- responsive ---------- */
+      @media (max-width: 1000px) {
+        .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dl-card { grid-template-columns: 1fr; }
+        .support-card { grid-template-columns: 1fr; }
+        .btn-saweria { justify-self: start; }
+      }
+      @media (max-width: 760px) {
+        body { font-size: 16px; }
+        :root { --head: 60px; }
+        .wrap { width: calc(100% - 32px); }
+        .head-inner nav { display: none; }
+        .shot-back { display: none; }
+        .feature-grid { grid-template-columns: 1fr; }
+        .shot-grid { grid-template-columns: 1fr; }
+        .compare-head, .compare-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr); gap: 8px; }
+        .compare-row .c-web { font-size: 14px; }
+        .log-group { grid-template-columns: 1fr; gap: 7px; }
+        .kind { justify-self: start; }
+        .dl-btn small { display: none; }
+        .log-head h3::before { display: none; }
+        .log-entry { padding-left: 16px; }
+      }
+      @media (max-width: 460px) {
+        .head-cta { display: none; }
+        .hero-actions .btn { width: 100%; }
+        .chips li { font-size: 12.5px; padding: 6px 12px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+        .js .feature, .js .shot-grid figure, .js .log-entry { opacity: 1; transform: none; }
+      }
+    </style>
+  </body>
+</html>

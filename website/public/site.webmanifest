@@ -2,12 +2,13 @@
   "name": "ytbplus",
   "short_name": "ytbplus",
   "description": "A native desktop player for YouTube Music.",
-  "start_url": "/",
+  "start_url": "/ytbplus/",
+  "scope": "/ytbplus/",
   "display": "browser",
   "background_color": "#fbf8f9",
   "theme_color": "#fbf8f9",
   "icons": [
-    { "src": "/assets/brand/icon.svg", "sizes": "any", "type": "image/svg+xml" },
-    { "src": "/assets/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+    { "src": "/ytbplus/assets/brand/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/ytbplus/assets/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
   ]
 }

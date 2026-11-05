@@ -1,0 +1,2 @@
+# GitHub Pages runs Jekyll unless this file exists, and Jekyll drops the
+# _astro/ folder the build writes its CSS into.
