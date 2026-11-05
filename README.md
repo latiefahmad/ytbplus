@@ -383,14 +383,6 @@ in your day, you can support it at
 thank-you, not a subscription: nothing is locked behind it, and it buys no say
 in the [non-goals](#non-goals).
 
-## The name
-
-ytbplus is built with [MyGO](https://github.com/egoist/mygo), and its name comes
-from one of MyGO!!!!!'s songs, [迷路日々](https://www.youtube.com/watch?v=STgVa-reZkM).
-The title is written with the characters for *ytbplus* (迷路, "maze") and *hibi*
-(日々, "days"), so it reads as "maze days" — but the song is pronounced
-"Melody" (メロディ), a pun on the English word. The app takes the first half.
-
 ## Credits
 
 - [MyGo](https://mygo.egoist.dev/) by [EGOIST](https://github.com/egoist), the
