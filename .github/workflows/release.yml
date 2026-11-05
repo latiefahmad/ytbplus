@@ -257,14 +257,11 @@ jobs:
             echo "The MYGO_UPDATER_PRIVATE_KEY secret is not set; refusing to release without signed updates."
             exit 1
           }
-          # Diagnostic: report the shape of the key, never its bytes.
-          printf 'key length: %s\n' "${#MYGO_UPDATER_PRIVATE_KEY}"
-          printf 'lines: %s\n' "$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | wc -l)"
-          printf 'contains CR: %s\n' "$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | grep -c $'\r' || true)"
-          printf 'has PEM header: %s\n' "$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | grep -c 'BEGIN' || true)"
-          decoded=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d 2>/dev/null | wc -c)
-          printf 'decoded bytes: %s (need 64)\n' "$decoded"
-          exit 1
+          key_bytes=$(printf '%s' "$MYGO_UPDATER_PRIVATE_KEY" | tr -d '[:space:]' | base64 -d 2>/dev/null | wc -c)
+          test "$key_bytes" = 64 || {
+            echo "MYGO_UPDATER_PRIVATE_KEY is $key_bytes bytes once decoded, but a private key is 64. A 32-byte value is the public key: paste mygo-update.key, not mygo-update.pub."
+            exit 1
+          }
 
       - name: Check the Last.fm application key
         if: needs.gate.outputs.tag != ''
