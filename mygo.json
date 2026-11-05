@@ -1,7 +1,9 @@
 {
   "name": "ytbplus",
   "identifier": "com.latiefahmad.ytbplus",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "publisher": "latiefahmad",
+  "copyright": "Copyright © 2026 latiefahmad",
   "out": "build",
   "urlSchemes": [
     "ytbplus"
@@ -12,6 +14,7 @@
     "tagPrefix": "ytbplus-v"
   },
   "linux": {
+    "maintainer": "latiefahmad",
     "depends": [
       "libayatana-appindicator3-1"
     ]

@@ -209,35 +209,36 @@ func (a *app) signInDialog(c *ui.Context) {
 			ui.Icon(c, m3.IconLogin).FontSize(28).TextColor(sc.OnPrimaryContainer)
 		})
 		m3.EmphasizedText(c, m3.HeadlineSmall, "Sign in to YouTube Music")
-		m3.Text(c, m3.BodyMedium, "ytbplus opens a separate browser window where you sign in to your Google account. ytbplus never sees your password. It keeps the session of that window, which gives it the same account access as a browser, and closes the window. Your own browser is not used.").TextColor(sc.OnSurfaceVariant)
-		if m3.Button(c, m3.ButtonSpec{Label: "Sign in with a browser window", Icon: m3.IconLogin, Size: m3.Medium56, Disabled: busy, Key: "sign-in-window"}).Clicked() {
-			a.windowSignIn()
+		m3.Text(c, m3.BodyMedium, "Use a browser you are already signed in with. Sign in at "+musicURL+" there first if you are not, then pick it. ytbplus never sees your password, and it keeps the session that browser already has, so there is nothing to type here.").TextColor(sc.OnSurfaceVariant)
+		picker := m3.Button(c, m3.ButtonSpec{Label: "Import from a browser", Icon: m3.IconExpandMore, Size: m3.Medium56, Disabled: busy, Key: "import-from"})
+		if picker.Clicked() {
+			s.browsers = !s.browsers
 		}
-		if s.inWindow {
-			m3.Text(c, m3.BodyMedium, "Finish signing in in the window that opened. ytbplus closes it for you.").TextColor(sc.Primary)
+		m3.Menu(c, picker, &s.browsers, 240, func() {
+			for _, source := range a.account.sources() {
+				if m3.MenuItem(c, source.Label, nil).Clicked() {
+					s.browsers = false
+					a.importSignIn(source)
+				}
+			}
+		})
+		if s.importFailed != "" {
+			m3.EmphasizedText(c, m3.TitleSmall, "Importing from "+s.importFailed+" did not work. Paste the Cookie header instead.").TextColor(sc.Primary)
 		}
-		toggle := m3.Button(c, m3.ButtonSpec{Label: "Advanced", Icon: advancedIcon(s.advanced), Kind: m3.TextOnly, Key: "sign-in-advanced"})
+		m3.Text(c, m3.BodySmall, "The copy can stop working when that browser renews its cookies.").TextColor(sc.OnSurfaceVariant)
+		toggle := m3.Button(c, m3.ButtonSpec{Label: "Other ways to sign in", Icon: advancedIcon(s.advanced), Kind: m3.TextOnly, Key: "sign-in-advanced"})
 		if toggle.Clicked() {
 			s.advanced = !s.advanced
 		}
 		if s.advanced {
-			m3.Text(c, m3.BodyMedium, "Or use a browser you are already signed in with. This copy can stop working when that browser renews its cookies. Sign in at "+musicURL+" there first, then pick it:").TextColor(sc.OnSurfaceVariant)
-			picker := m3.Button(c, m3.ButtonSpec{Label: "Import from a browser", Icon: m3.IconExpandMore, Kind: m3.Tonal, Size: m3.Medium56, Disabled: busy, Key: "import-from"})
-			if picker.Clicked() {
-				s.browsers = !s.browsers
+			m3.Text(c, m3.BodyMedium, "Or sign in to a browser window that ytbplus opens, which holds nothing of your own browsing. It closes once the session is read, and that session lasts until Google expires it:").TextColor(sc.OnSurfaceVariant)
+			if m3.Button(c, m3.ButtonSpec{Label: "Sign in with a browser window", Icon: m3.IconLogin, Kind: m3.Tonal, Size: m3.Medium56, Disabled: busy, Key: "sign-in-window"}).Clicked() {
+				a.windowSignIn()
 			}
-			m3.Menu(c, picker, &s.browsers, 240, func() {
-				for _, source := range a.account.sources() {
-					if m3.MenuItem(c, source.Label, nil).Clicked() {
-						s.browsers = false
-						a.importSignIn(source)
-					}
-				}
-			})
-			if s.importFailed != "" {
-				m3.EmphasizedText(c, m3.TitleSmall, "Importing from "+s.importFailed+" did not work. Paste the Cookie header instead.").TextColor(sc.Primary)
+			if s.inWindow {
+				m3.Text(c, m3.BodyMedium, "Finish signing in in the window that opened. ytbplus closes it for you.").TextColor(sc.Primary)
 			}
-			m3.Text(c, m3.BodyMedium, "To paste it: open music.youtube.com while signed in, open your browser's developer tools (F12) and go to the Network tab, reload, pick a request to music.youtube.com, and copy the value of its Cookie request header.").TextColor(sc.OnSurfaceVariant)
+			m3.Text(c, m3.BodyMedium, "Or paste the Cookie header of a signed-in browser. To paste it: open music.youtube.com signed in, open the developer tools (F12), Network tab, reload, pick a request to music.youtube.com, and copy its Cookie request header.").TextColor(sc.OnSurfaceVariant)
 			box := ui.Column(c.Key("cookie-box")).Padding(12, 16).Radius(m3.Large).Background(sc.SurfaceContainerHighest)
 			if box.FocusWithin() {
 				box.Border(2, sc.Primary)

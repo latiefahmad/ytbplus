@@ -129,7 +129,7 @@ func TestImportedAccountChoiceSurvivesRestartAndRefresh(t *testing.T) {
 				}
 				tt.Frame()
 			}
-			for _, label := range []string{"Account", "Sign in", "Advanced", "Import from a browser", "Helium"} {
+			for _, label := range []string{"Account", "Sign in", "Import from a browser", "Helium"} {
 				click(label)
 			}
 			if !tt.HasText("Choose your YouTube account") || !tt.HasText("Music account") || !tt.HasText("Personal account") {
@@ -145,7 +145,7 @@ func TestImportedAccountChoiceSurvivesRestartAndRefresh(t *testing.T) {
 			if store.cookie != "" || a.signedIn() || a.account.signIn.imported != "" {
 				t.Fatal("cancelling kept the imported session")
 			}
-			for _, label := range []string{"Account", "Sign in", "Advanced", "Import from a browser", "Helium"} {
+			for _, label := range []string{"Account", "Sign in", "Import from a browser", "Helium"} {
 				click(label)
 			}
 			transport.omitEmail = true

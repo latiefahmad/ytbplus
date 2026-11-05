@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-05
+
+### Changed
+
+- **Signing in starts with the browser you already use.** The dialog offers "Import from a browser" first, so a browser that is already signed in to YouTube Music signs ytbplus in without typing an email or password. The throwaway sign-in window and the pasted Cookie header moved under "Other ways to sign in".
+
+### Fixed
+
+- **Windows shows latiefahmad as the publisher.** The installed app lists it in Settings > Apps instead of leaving the Publisher blank.
+
 ## [1.0.0] - 2026-11-05
 
 ### Changed

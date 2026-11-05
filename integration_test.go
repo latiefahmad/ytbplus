@@ -1333,10 +1333,13 @@ func TestFailedBrowserImportOffersPastingTheCookieHeader(t *testing.T) {
 	a.openSignIn()
 	tt := ui.NewTester(a.view, 1000, 900)
 	tt.Frame()
-	if tt.HasText("To paste it:") || tt.HasText("Import from a browser") {
-		t.Fatalf("the advanced ways to sign in show before they are asked for: %q", tt.Texts())
+	if !tt.HasText("Import from a browser") {
+		t.Fatalf("the dialog does not offer the browser the user is signed in with: %q", tt.Texts())
 	}
-	if err := tt.Click("Advanced"); err != nil {
+	if tt.HasText("To paste it:") {
+		t.Fatalf("the other ways to sign in show before they are asked for: %q", tt.Texts())
+	}
+	if err := tt.Click("Other ways to sign in"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
@@ -1475,6 +1478,10 @@ func TestSignInWithABrowserWindow(t *testing.T) {
 	a.openSignIn()
 	tt := ui.NewTester(a.view, 1000, 900)
 	tt.Frame()
+	if err := tt.Click("Other ways to sign in"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
 	if err := tt.Click("Sign in with a browser window"); err != nil {
 		t.Fatal(err)
 	}
@@ -1507,12 +1514,21 @@ func TestSignInWindowShowsTheFlatpakOverride(t *testing.T) {
 	a.openSignIn()
 	tt := ui.NewTester(a.view, 1000, 900)
 	tt.Frame()
+	if err := tt.Click("Other ways to sign in"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
 	if err := tt.Click("Sign in with a browser window"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
 	if !tt.HasText(cookies.HostAccessCommand) {
 		t.Fatalf("the dialog does not show the override: %q", tt.Texts())
+	}
+	// The expanded dialog is taller than the window, and it scrolls.
+	if panel, ok := tt.Find("dialog-panel"); ok {
+		tt.Scroll(panel.X+panel.W/2, panel.Y+panel.H/2, 0, 4000)
+		tt.Frame()
 	}
 	if err := tt.Click("Copy command"); err != nil {
 		t.Fatal(err)
