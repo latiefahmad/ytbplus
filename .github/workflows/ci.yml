@@ -10,12 +10,12 @@ name: CI
 
 on:
   push:
-    branches: ["master"]
+    branches: ["main"]
   pull_request:
 
 # A newer push to the same ref supersedes the run in flight. A pull request
 # is cancelled, so a fix does not wait behind the run it replaced; a push to
-# master runs to the end, so every commit that lands is checked.
+# main runs to the end, so every commit that lands is checked.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
