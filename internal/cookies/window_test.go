@@ -1070,6 +1070,36 @@ func TestPreferringPutsTheDefaultBrowserFirst(t *testing.T) {
 	}
 }
 
+func TestWindowsDefaultKindRecognizesZen(t *testing.T) {
+	for _, c := range []struct {
+		name       string
+		kind       string
+		executable string
+		want       string
+	}{
+		{"Zen beside a Firefox ProgID", "firefox", `C:\Program Files\Zen Browser\zen.exe`, "zen"},
+		{"Firefox stays Firefox", "firefox", `"C:\Program Files\Mozilla Firefox\firefox.exe" -- "%1"`, "firefox"},
+		{"another browser changes nothing", "firefox", `C:\Other\browser.exe`, "firefox"},
+		{"no executable changes nothing", "firefox", "", "firefox"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			if got := windowsDefaultKind(c.kind, c.executable); got != c.want {
+				t.Errorf("windowsDefaultKind(%q, %q) = %q, want %q", c.kind, c.executable, got, c.want)
+			}
+		})
+	}
+}
+
+func TestCommandExecutableReadsTheQuotedProgram(t *testing.T) {
+	output := "HKEY_CLASSES_ROOT\\ZenHTML\\shell\\open\\command\r\n    (Default)    REG_SZ    \"C:\\Program Files\\Zen Browser\\zen.exe\" -- \"%1\"\r\n"
+	if got, want := commandExecutable(output), `C:\Program Files\Zen Browser\zen.exe`; got != want {
+		t.Errorf("commandExecutable = %q, want %q", got, want)
+	}
+	if got := commandExecutable("no value"); got != "" {
+		t.Errorf("commandExecutable of no value = %q", got)
+	}
+}
+
 func TestStaleAgeOutlivesTheSignInTimeout(t *testing.T) {
 	if proc.StaleAge <= 2*SignInTimeout {
 		t.Errorf("proc.StaleAge = %v, want more than twice SignInTimeout %v", proc.StaleAge, SignInTimeout)

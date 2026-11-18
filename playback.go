@@ -245,14 +245,23 @@ func (a *app) afterEnter(item youtube.MusicItem, changed bool) {
 
 // notifyTrack waits for a fresh Windows cover so the native notification can
 // show it instead of the app icon. Other platforms keep their normal
-// notification path.
+// notification path. A track that changes while a ytbplus window is in front
+// leaves no notification: the window already shows it.
 func (a *app) notifyTrack(item youtube.MusicItem) {
-	if a.desktop == nil {
+	notices := a.trackNotices()
+	if notices == nil {
 		return
+	}
+	show := func(icon []byte) {
+		if notices.appActive() {
+			notices.dismissNotification()
+			return
+		}
+		notices.notify(item, icon)
 	}
 	if !notificationArtworkNeeded() || a.thumbs == nil {
 		a.notificationArtwork.stop()
-		a.desktop.notify(item, nil)
+		show(nil)
 		return
 	}
 	startTask(a, &a.notificationArtwork, 8*time.Second, func(ctx context.Context) ([]byte, error) {
@@ -265,8 +274,20 @@ func (a *app) notifyTrack(item youtube.MusicItem) {
 			log.Printf("fetching track notification artwork: %v", err)
 			icon = nil // The coloured app icon is the safe fallback.
 		}
-		a.desktop.notify(item, icon)
+		show(icon)
 	})
+}
+
+// trackNotices is what shows a track notification: the desktop in the app,
+// and a fake in tests.
+func (a *app) trackNotices() trackNotices {
+	if a.notices != nil {
+		return a.notices
+	}
+	if a.desktop == nil {
+		return nil
+	}
+	return a.desktop
 }
 
 // starting reports whether a chosen track is being checked or resolved.

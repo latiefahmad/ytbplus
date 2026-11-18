@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-18
+
+### Added
+
+- **Search suggestions work from the keyboard.** Up and Down highlight a suggestion, and Enter searches or opens it instead of searching the text typed.
+- **Copy a track's title or artist.** The song menu's Copy entry offers both beside Copy link, and says what it copied.
+
+### Fixed
+
+- **Skipping a track stops its yt-dlp lookup.** A track you skip no longer leaves yt-dlp running in the background, so skipping quickly stays light on the network and the battery.
+- **ytbplus keeps its place when the computer ends the session.** Signing out, restarting or shutting down saves the queue, the position and the settings instead of losing the last changes.
+- **No track notification while ytbplus is in front.** The window already shows the track, so the notification waits until you are in another app, and the previous track's notification goes.
+- **A default Zen browser on Windows no longer sends sign-in to Firefox.** ytbplus recognizes Zen and keeps the sign-in window in Chrome.
+
 ## [1.0.3] - 2026-11-18
 
 ### Fixed

@@ -73,7 +73,7 @@ type candidate struct {
 // can be read.
 func findBrowser(ctx context.Context, canReadFirefox bool) (candidate, bool) {
 	id := defaultBrowserID(ctx)
-	for _, c := range preferring(browserCandidates(), id, browserKind(id)) {
+	for _, c := range preferring(browserCandidates(), id, defaultBrowserKind(ctx, id)) {
 		if !canReadFirefox && c.family == firefoxFamily {
 			continue
 		}
@@ -188,12 +188,79 @@ func browserKind(id string) string {
 	return ""
 }
 
+// systemQueryTimeout bounds a command that asks the system a question.
+const systemQueryTimeout = 3 * time.Second
+
+// defaultBrowserKind names the browser an identifier belongs to, looking
+// past a Windows ProgID that names Firefox for a browser that is not: Zen
+// registers itself as a Firefox-family handler.
+func defaultBrowserKind(ctx context.Context, id string) string {
+	kind := browserKind(id)
+	if runtime.GOOS != "windows" || kind != "firefox" {
+		return kind
+	}
+	return windowsDefaultKind(kind, windowsDefaultExecutable(ctx, id))
+}
+
+// windowsDefaultKind corrects the kind of a Firefox-family default browser by
+// the executable its ProgID runs. Zen keeps no Windows candidates of its own,
+// so sign-in still opens Chrome rather than mistaking Zen for Firefox.
+func windowsDefaultKind(kind, executable string) string {
+	switch strings.ToLower(executableBase(executable)) {
+	case "zen.exe":
+		return "zen"
+	case "firefox.exe":
+		return "firefox"
+	}
+	return kind
+}
+
+// windowsDefaultExecutable is the program a Windows ProgID opens.
+func windowsDefaultExecutable(ctx context.Context, id string) string {
+	ctx, cancel := context.WithTimeout(ctx, systemQueryTimeout)
+	defer cancel()
+	out, err := proc.Command(ctx, "reg", "query", `HKCR\`+id+`\shell\open\command`, "/ve").Output()
+	if err != nil {
+		return ""
+	}
+	return commandExecutable(string(out))
+}
+
+// commandExecutable reads the program from a reg query answer: the quoted
+// path when there is one, the first word otherwise.
+func commandExecutable(output string) string {
+	_, command, ok := strings.Cut(output, "REG_SZ")
+	if !ok {
+		return ""
+	}
+	command = strings.TrimSpace(command)
+	if strings.HasPrefix(command, `"`) {
+		end := strings.Index(command[1:], `"`)
+		if end < 0 {
+			return ""
+		}
+		return command[1 : end+1]
+	}
+	if end := strings.IndexAny(command, " \t\r\n"); end >= 0 {
+		return command[:end]
+	}
+	return command
+}
+
+// executableBase is the file name of an executable path.
+func executableBase(path string) string {
+	if i := strings.LastIndexAny(path, `\/`); i >= 0 {
+		return path[i+1:]
+	}
+	return path
+}
+
 // defaultBrowserID asks the system which browser the user chose to open
 // links. It returns the lowercased identifier the system uses: the .desktop
 // file on Linux, the bundle ID on macOS, the ProgID on Windows, or "" when
 // it cannot be read.
 func defaultBrowserID(ctx context.Context) string {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, systemQueryTimeout)
 	defer cancel()
 	switch runtime.GOOS {
 	case "linux":

@@ -365,9 +365,9 @@ func TestSearchFlow(t *testing.T) {
 }
 
 // An item of the panel under the search bar offers its menu on a right click,
-// as it does wherever else it appears: a song offers the queue and its link,
-// and anything that opens a page offers that. The panel stays open, and a
-// right click must not also choose the item under the menu.
+// as it does wherever else it appears: a song offers the queue actions and the
+// Copy page, and anything that opens a page offers that. The panel stays open,
+// and a right click must not also choose the item under the menu.
 func TestRightClickingASuggestionOffersItsMenu(t *testing.T) {
 	a := newTestApp(t)
 	a.router.Push("/search")
@@ -383,12 +383,13 @@ func TestRightClickingASuggestionOffersItsMenu(t *testing.T) {
 		t.Fatalf("the items the query matches are missing: %q", tt.Texts())
 	}
 
-	// A song is the song it is anywhere: the queue actions, and its link.
+	// A song is the song it is anywhere: the queue actions, and the Copy page
+	// with its copy actions.
 	if err := tt.RightClick("Suggested Song"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	for _, want := range []string{"Play next", "Add to queue", "Add to playlist", "Copy link"} {
+	for _, want := range []string{"Play next", "Add to queue", "Add to playlist", "Copy"} {
 		if !tt.HasText(want) {
 			t.Errorf("right-clicking a song among the suggestions offered no %q: %q", want, tt.Texts())
 		}
@@ -434,6 +435,78 @@ func TestRightClickingASuggestionOffersItsMenu(t *testing.T) {
 	}
 }
 
+// A song's menu copies its title and every artist credited on its byline, and
+// offers no artist for a song whose credits name none.
+func TestASongsMenuCopiesItsTitleAndArtist(t *testing.T) {
+	a := newTestApp(t)
+	a.router.Push("/playlist/VLPL_metadata")
+	tt := ui.NewTester(a.view, 1180, 850)
+	tt.Frame()
+
+	if err := tt.RightClick("Linked Track"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Copy"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("Copy title") || !tt.HasText("Copy artist") {
+		t.Fatalf("the copy page of a song with credits offered %q", tt.Texts())
+	}
+	if err := tt.Click("Copy title"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if got := tt.Clipboard(); got != "Linked Track" {
+		t.Errorf("Copy title copied %q, want the song's title", got)
+	}
+	if a.menu.open {
+		t.Error("the menu stayed open after Copy title")
+	}
+
+	row, ok := tt.Find("Linked Track")
+	if !ok {
+		t.Fatalf("the song row is missing: %q", tt.Texts())
+	}
+	tt.Move(row.X+row.W/2, row.Y+row.H/2)
+	tt.Frame()
+	if err := tt.Click("More options for Linked Track"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Copy"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Copy artist"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if got := tt.Clipboard(); got != "Aurora Vale, Guest Artist" {
+		t.Errorf("Copy artist copied %q, want every credited artist", got)
+	}
+	if a.menu.open {
+		t.Error("the menu stayed open after Copy artist")
+	}
+
+	if err := tt.RightClick("Unlinked Track"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Copy"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("Copy title") {
+		t.Errorf("the copy page of a song without credits offered %q", tt.Texts())
+	}
+	if tt.HasText("Copy artist") {
+		t.Errorf("the menu on a song without credits offered Copy artist: %q", tt.Texts())
+	}
+	a.menu.close()
+}
+
 // The search field is in the top bar of every page of YouTube Music, and
 // submitting it there shows the search page with what it ran.
 // A suggested query is chosen to see what it searches, from whichever page the
@@ -455,6 +528,39 @@ func TestChoosingASuggestionFromAnotherPageShowsTheSearch(t *testing.T) {
 	if err := tt.Click("Yorushika songs"); err != nil {
 		t.Fatal(err)
 	}
+	tt.Frame()
+	if r, _ := a.route(); r.id != routeSearch {
+		t.Fatalf("choosing a suggestion left the app on %q", a.path())
+	}
+	if !tt.HasText("Search Result Song") || searches.Load() != 1 {
+		t.Fatalf("the search did not run: %q", tt.Texts())
+	}
+	if a.search.query != "Yorushika songs" {
+		t.Errorf("the field reads %q", a.search.query)
+	}
+}
+
+// Up and Down move through the suggestions, and Enter chooses the one
+// highlighted instead of searching the text typed.
+func TestChoosingASuggestionWithTheKeyboard(t *testing.T) {
+	a := newTestApp(t)
+	a.router.Push("/explore")
+	tt := ui.NewTester(a.view, 1000, 700)
+	searches.Store(0)
+
+	if err := tt.Click(searchPlaceholder); err != nil {
+		t.Fatal(err)
+	}
+	tt.Type("yor")
+	tt.Frame()
+	if !tt.HasText("Yorushika songs") {
+		t.Fatalf("suggestions are missing: %q", tt.Texts())
+	}
+	tt.Key(0, ui.KeyDown)
+	tt.Frame()
+	tt.Key(0, ui.KeyDown)
+	tt.Frame()
+	tt.Key(0, ui.KeyEnter)
 	tt.Frame()
 	if r, _ := a.route(); r.id != routeSearch {
 		t.Fatalf("choosing a suggestion left the app on %q", a.path())
@@ -569,12 +675,15 @@ func TestRightClickingASearchResultOffersItsMenu(t *testing.T) {
 	for _, c := range []struct {
 		result string
 		offer  string
+		// copy names the menu's copy action: a song keeps its title, its
+		// artist and its link on a page of their own.
+		copy string
 	}{
-		{"Mixed Album", "Open album"},  // the top result
-		{"Row Album", "Open album"},    // an album among the rows
-		{"Row Artist", "Go to artist"}, // an artist among the rows
-		{"Row Playlist", "Open playlist"},
-		{"Row Song", "Add to queue"}, // a song among the rows
+		{"Mixed Album", "Open album", "Copy link"},  // the top result
+		{"Row Album", "Open album", "Copy link"},    // an album among the rows
+		{"Row Artist", "Go to artist", "Copy link"}, // an artist among the rows
+		{"Row Playlist", "Open playlist", "Copy link"},
+		{"Row Song", "Add to queue", "Copy"}, // a song among the rows
 	} {
 		if tt.HasText(c.offer) {
 			t.Fatalf("%q is on screen before right-clicking %q: %q", c.offer, c.result, tt.Texts())
@@ -586,8 +695,8 @@ func TestRightClickingASearchResultOffersItsMenu(t *testing.T) {
 		if !tt.HasText(c.offer) {
 			t.Errorf("right-clicking %q offered no %q: %q", c.result, c.offer, tt.Texts())
 		}
-		if !tt.HasText("Copy link") {
-			t.Errorf("the menu on %q has no Copy link: %q", c.result, tt.Texts())
+		if !tt.HasText(c.copy) {
+			t.Errorf("the menu on %q has no %s: %q", c.result, c.copy, tt.Texts())
 		}
 		a.menu.close()
 		tt.Frame()

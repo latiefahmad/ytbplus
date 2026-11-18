@@ -39,15 +39,18 @@ type SearchResult struct {
 }
 
 // SearchBar builds a pill-shaped search field. It never searches by itself:
-// typing only edits the text, and Submitted reports Enter. The element is the
-// bar, for anchoring what opens under it, as the suggestions do.
-func SearchBar(c *ui.Context, spec SearchSpec) (SearchResult, ui.Element) {
+// typing only edits the text, and Submitted reports Enter. The bar anchors what
+// opens under it, as the suggestions do; the field carries their keyboard
+// handling.
+func SearchBar(c *ui.Context, spec SearchSpec) (SearchResult, ui.Element, ui.Element) {
 	sc := Of(c).Scheme
 	height := spec.Height
 	if height == 0 {
 		height = 56
 	}
 	var result SearchResult
+	// input is the text field, returned for the shortcuts of what it suggests.
+	var input ui.Element
 	if spec.Key == nil {
 		spec.Key = "search-bar"
 	}
@@ -72,7 +75,7 @@ func SearchBar(c *ui.Context, spec SearchSpec) (SearchResult, ui.Element) {
 		} else {
 			ui.Icon(c, IconSearch).FontSize(24).TextColor(sc.OnSurfaceVariant)
 		}
-		input := ui.TextInputBase(c.Key("input"), spec.Value).Placeholder(spec.Placeholder).Label(spec.Placeholder).
+		input = ui.TextInputBase(c.Key("input"), spec.Value).Placeholder(spec.Placeholder).Label(spec.Placeholder).
 			Grow(1).MinWidth(0).FontSize(16).TextColor(sc.OnSurface).Padding(0, spec.TrailingPadding, 0, 0).FocusRing(false)
 		if spec.Focus != nil {
 			input.Bind(spec.Focus)
@@ -91,5 +94,5 @@ func SearchBar(c *ui.Context, spec SearchSpec) (SearchResult, ui.Element) {
 		}
 	})
 	result.Focused = bar.FocusWithin()
-	return result, bar
+	return result, bar, input
 }

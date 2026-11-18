@@ -32,11 +32,15 @@ type URLs struct {
 }
 
 type urlEntry struct {
-	at    time.Time
-	done  chan struct{}
-	url   string
-	total time.Duration
-	err   error
+	at time.Time
+	// waiters counts the Gets waiting on the resolve, and cancel stops it.
+	// Both belong to URLs.mu.
+	waiters int
+	cancel  context.CancelFunc
+	done    chan struct{}
+	url     string
+	total   time.Duration
+	err     error
 }
 
 // NewURLs returns an empty cache that resolves with resolve.
@@ -45,8 +49,10 @@ func NewURLs(resolve Resolver) *URLs {
 }
 
 // Get returns the audio URL and length of a track, resolving it unless a
-// fresh result or a resolve in flight exists. The resolve goes on when ctx
-// ends, so a later Get can still use it; a failed one is not remembered.
+// fresh result or a resolve in flight exists. The resolve goes on while a
+// request waits on it, so a later Get can still share it, and stops when the
+// last one leaves, so a skipped track does not leave yt-dlp running; a failed
+// one is not remembered.
 func (c *URLs) Get(ctx context.Context, videoID string) (string, time.Duration, error) {
 	if err := ctx.Err(); err != nil {
 		return "", 0, err
@@ -54,19 +60,44 @@ func (c *URLs) Get(ctx context.Context, videoID string) (string, time.Duration, 
 	c.mu.Lock()
 	e, ok := c.entries[videoID]
 	if !ok || e.stale() {
-		e = &urlEntry{at: time.Now(), done: make(chan struct{})}
+		// The resolve keeps the request's values but not its cancellation:
+		// the request leaving is what stops it, once no other waits.
+		runCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), ResolveTimeout)
+		e = &urlEntry{at: time.Now(), done: make(chan struct{}), cancel: cancel}
 		c.entries[videoID] = e
 		c.trimLocked()
-		// The resolve outlives this request, so a later one can share it;
-		// it keeps the request's values but not its cancellation.
-		go c.run(context.WithoutCancel(ctx), videoID, e)
+		go c.run(runCtx, videoID, e)
 	}
+	e.waiters++
 	c.mu.Unlock()
 	select {
 	case <-e.done:
+		c.leave(e)
 		return e.url, e.total, e.err
 	case <-ctx.Done():
+		c.leave(e)
 		return "", 0, ctx.Err()
+	}
+}
+
+// leave ends one request's wait on e. When the last one leaves, the resolve is
+// cancelled and forgotten: its answer would have no one to reach.
+func (c *URLs) leave(e *urlEntry) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	e.waiters--
+	if e.waiters > 0 {
+		return
+	}
+	select {
+	case <-e.done:
+	default:
+		e.cancel()
+		for id, other := range c.entries {
+			if other == e {
+				delete(c.entries, id)
+			}
+		}
 	}
 }
 
@@ -80,8 +111,7 @@ func (c *URLs) Forget(videoID string) {
 }
 
 func (c *URLs) run(ctx context.Context, videoID string, e *urlEntry) {
-	ctx, cancel := context.WithTimeout(ctx, ResolveTimeout)
-	defer cancel()
+	defer e.cancel()
 	e.url, e.total, e.err = c.resolve(ctx, videoID)
 	if e.err != nil {
 		c.mu.Lock()

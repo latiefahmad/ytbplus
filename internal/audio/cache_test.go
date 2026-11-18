@@ -137,3 +137,29 @@ func TestURLsShareOneResolve(t *testing.T) {
 		t.Errorf("a failed resolve was remembered: %d resolves", calls.Load())
 	}
 }
+
+// A resolve stops when the last request waiting on it leaves, so skipping a
+// track does not leave yt-dlp running.
+func TestURLsStopWhenTheLastRequestLeaves(t *testing.T) {
+	started, stopped := make(chan struct{}), make(chan struct{})
+	urls := NewURLs(func(ctx context.Context, _ string) (string, time.Duration, error) {
+		close(started)
+		<-ctx.Done()
+		close(stopped)
+		return "", 0, ctx.Err()
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _, _ = urls.Get(ctx, "a")
+	}()
+	<-started
+	cancel()
+	<-done
+	select {
+	case <-stopped:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the resolve kept running after its last request left")
+	}
+}

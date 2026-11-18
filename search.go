@@ -25,6 +25,9 @@ const (
 	suggestItems   = 5
 	// searchPlaceholder names what a search finds.
 	searchPlaceholder = "Search songs, albums, artists, podcasts"
+	// highlightTypedText is the highlight that points at the text typed
+	// rather than at one of its suggestions.
+	highlightTypedText = 0
 )
 
 // searchState is the search page. Typing only edits query; a search runs when
@@ -48,6 +51,10 @@ type searchState struct {
 	suggestions youtube.SearchSuggestions
 	suggest     task
 	suggestOpen bool
+	// highlight is the suggestion the keyboard is on: highlightTypedText for
+	// the text typed, then the completed queries and the items in the order
+	// the panel shows them.
+	highlight int
 }
 
 // runSearch searches for query with the filter given. It is the only way a
@@ -122,7 +129,7 @@ func (a *app) suggestSearches(query string) {
 		if err != nil || suggestions == nil {
 			suggestions = &youtube.SearchSuggestions{}
 		}
-		a.search.suggestions = *suggestions
+		a.search.suggestions, a.search.highlight = *suggestions, highlightTypedText
 	})
 }
 
@@ -133,17 +140,73 @@ func (a *app) cancelSuggestions() {
 	a.search.suggest.stop()
 	a.search.suggestions = youtube.SearchSuggestions{}
 	a.search.suggestOpen = false
+	a.search.highlight = highlightTypedText
 }
+
+// shownSuggestions is what the panel under the search bar lists: the
+// completed queries and the items the text already matches, bounded as
+// YouTube Music's own panel does.
+func (a *app) shownSuggestions() (queries []string, items []youtube.MusicItem) {
+	s := &a.search
+	if !s.suggestOpen || strings.TrimSpace(s.query) == "" {
+		return nil, nil
+	}
+	queries = s.suggestions.Queries
+	if len(queries) > suggestQueries {
+		queries = queries[:suggestQueries]
+	}
+	items = a.visibleItems(s.suggestions.Items)
+	if len(items) > suggestItems {
+		items = items[:suggestItems]
+	}
+	return queries, items
+}
+
+// highlightSuggestion moves the keyboard's highlight by step through the
+// suggestions and the typed text, which is the place before the first one and
+// after the last.
+func (a *app) highlightSuggestion(step, n int) {
+	h := a.search.highlight
+	if h < 0 || h > n {
+		h = 0
+	}
+	a.search.highlight = (h + step + n + 1) % (n + 1)
+}
+
+// chooseSuggestion searches a completed query or opens the item at index, in
+// the order the panel shows them.
+func (a *app) chooseSuggestion(index int, queries []string, items []youtube.MusicItem) {
+	if index < len(queries) {
+		a.runSearchFrom(queries[index])
+		return
+	}
+	position := index - len(queries)
+	if position < 0 || position >= len(items) {
+		return
+	}
+	var tracks []youtube.MusicItem
+	for _, item := range items {
+		if item.IsTrack() {
+			tracks = append(tracks, item)
+		}
+	}
+	a.cancelSuggestions()
+	a.activate(items[position], tracks)
+}
+
+// suggestionKey names the row of the item at position in the panel.
+func suggestionKey(position int) string { return "suggestion-item-" + strconv.Itoa(position) }
 
 // searchBar is the field every page searches from, in the top bar. Submitting
 // it shows the search page; typing asks YouTube Music for what it offers,
-// which the panel under the bar shows.
+// which the panel under the bar shows. Up and Down move through the panel,
+// and Enter then chooses what is highlighted.
 func (a *app) searchBar(c *ui.Context) ui.Element {
 	trailingPadding := float32(0)
 	if a.keyboard.hints {
 		trailingPadding = 40
 	}
-	result, bar := m3.SearchBar(c, m3.SearchSpec{
+	result, bar, field := m3.SearchBar(c, m3.SearchSpec{
 		Value:           &a.search.query,
 		Placeholder:     searchPlaceholder,
 		Key:             "search",
@@ -152,7 +215,18 @@ func (a *app) searchBar(c *ui.Context) ui.Element {
 		MaxWidth:        520,
 		TrailingPadding: trailingPadding,
 	})
+	queries, items := a.shownSuggestions()
+	n := len(queries) + len(items)
+	if a.search.highlight > n {
+		a.search.highlight = highlightTypedText
+	}
+	if n > 0 {
+		field.OnShortcut(0, ui.KeyDown, func() { a.highlightSuggestion(1, n) })
+		field.OnShortcut(0, ui.KeyUp, func() { a.highlightSuggestion(-1, n) })
+	}
 	switch {
+	case result.Submitted && a.search.highlight > highlightTypedText:
+		a.chooseSuggestion(a.search.highlight-1, queries, items)
 	case result.Submitted:
 		a.runSearchFrom(a.search.query)
 	case result.Cleared:
@@ -169,18 +243,9 @@ func (a *app) searchBar(c *ui.Context) ui.Element {
 // Choosing either searches what it names.
 func (a *app) searchSuggestions(c *ui.Context, bar ui.Element) {
 	s := &a.search
-	if !s.suggestOpen || strings.TrimSpace(s.query) == "" {
-		return
-	}
-	queries := s.suggestions.Queries
-	if len(queries) > suggestQueries {
-		queries = queries[:suggestQueries]
-	}
-	items := a.visibleItems(s.suggestions.Items)
-	if len(items) > suggestItems {
-		items = items[:suggestItems]
-	}
+	queries, items := a.shownSuggestions()
 	if len(queries) == 0 && len(items) == 0 {
+		s.highlight = highlightTypedText
 		return
 	}
 	width := bar.Bounds().W
@@ -193,8 +258,8 @@ func (a *app) searchSuggestions(c *ui.Context, bar ui.Element) {
 			Background(sc.SurfaceContainerHigh).TextColor(sc.OnSurface)
 		m3.Elevation(c, panel, 3)
 		panel.Children(func() {
-			for _, query := range queries {
-				a.suggestionRow(c, query)
+			for i, query := range queries {
+				a.suggestionRow(c, query, s.highlight == i+1)
 			}
 			if len(queries) > 0 && len(items) > 0 {
 				ui.Box(c).Height(1).FillWidth().Margin(8, 8).Background(sc.OutlineVariant)
@@ -206,19 +271,20 @@ func (a *app) searchSuggestions(c *ui.Context, bar ui.Element) {
 				}
 			}
 			for i, item := range items {
-				a.suggestionItem(c, item, tracks, i)
+				a.suggestionItem(c, item, tracks, i, s.highlight == len(queries)+i+1)
 			}
 		})
 	})
 }
 
 // suggestionRow is one completed query of the panel under the search bar.
-func (a *app) suggestionRow(c *ui.Context, query string) {
+// The keyboard's highlight fills it as the pointer does.
+func (a *app) suggestionRow(c *ui.Context, query string, highlighted bool) {
 	sc := m3.Of(c).Scheme
 	row := ui.ButtonBase(c.Key("suggestion-" + query))
 	row.Height(m3.MinTarget).PaddingX(12).Gap(12).AlignItems(ui.Center).Radius(m3.Medium).
 		Cursor(ui.CursorPointer).Label(query).
-		Background(m3.StateFill(ui.Transparent, sc.OnSurface, row.Hovered(), row.Pressed(), row.FocusVisible()))
+		Background(m3.StateFill(ui.Transparent, sc.OnSurface, row.Hovered(), row.Pressed(), highlighted || row.FocusVisible()))
 	row.Children(func() {
 		ui.Icon(c, m3.IconSearch).FontSize(20).TextColor(sc.OnSurfaceVariant)
 		m3.Text(c, m3.BodyLarge, query).Grow(1).MinWidth(0).SingleLine().TextColor(sc.OnSurface)
@@ -234,13 +300,13 @@ func (a *app) suggestionRow(c *ui.Context, query string) {
 // Music already matches the text being typed with. Choosing it opens what it
 // names; a right click offers the menu the item offers wherever else it
 // appears, as a song row or a card does.
-func (a *app) suggestionItem(c *ui.Context, item youtube.MusicItem, tracks []youtube.MusicItem, position int) {
+func (a *app) suggestionItem(c *ui.Context, item youtube.MusicItem, tracks []youtube.MusicItem, position int, highlighted bool) {
 	sc := m3.Of(c).Scheme
-	key := "suggestion-item-" + strconv.Itoa(position)
+	key := suggestionKey(position)
 	row := ui.ButtonBase(c.Key(key))
 	row.Height(56).Padding(8, 8).Gap(12).Radius(m3.Medium).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer).Label(item.Title).
-		Background(m3.StateFill(ui.Transparent, sc.OnSurface, row.Hovered(), row.Pressed(), row.FocusVisible()))
+		Background(m3.StateFill(ui.Transparent, sc.OnSurface, row.Hovered(), row.Pressed(), highlighted || row.FocusVisible()))
 	var menuAnchor ui.Element
 	hasAnchor := false
 	row.Children(func() {
