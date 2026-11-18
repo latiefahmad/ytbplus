@@ -3,6 +3,8 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "cookies",
     srcs = [
+        "browserjob_other.go",
+        "browserjob_windows.go",
         "browsers.go",
         "chromium.go",
         "devtools.go",
@@ -17,7 +19,15 @@ go_library(
         "//internal/fsutil",
         "//internal/proc",
         "//internal/ytdlp",
-    ],
+    ] + select({
+        "@rules_go//go/platform:windows_amd64": [
+            "@org_golang_x_sys//windows",
+        ],
+        "@rules_go//go/platform:windows_arm64": [
+            "@org_golang_x_sys//windows",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 go_test(

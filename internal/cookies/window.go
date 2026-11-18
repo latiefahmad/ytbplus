@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -44,6 +45,12 @@ var errWindowGone = errors.New("the sign-in window is gone")
 // SignInTimeout is how long a sign-in window may stay open: time to type a
 // password and a second factor.
 const SignInTimeout = 5 * time.Minute
+
+// debugPortGrace is how long the debugging port may still appear after the
+// process that was started exits. A Chromium browser can hand its window to
+// another process and exit, which Edge does on Windows, so the process ending
+// does not mean the window is gone.
+const debugPortGrace = 5 * time.Second
 
 // signInURL is the Google sign-in page that returns to YouTube Music once the
 // user signs in. It has the form of the Sign in link on youtube.com: the
@@ -159,8 +166,15 @@ func SignInWindow(ctx context.Context, options WindowOptions) (string, error) {
 
 	ctx, cancel := context.WithTimeout(ctx, SignInTimeout)
 	defer cancel()
-	cmd := hostCommand(ctx, b.path, b.windowArgs(profile, options.URL)...)
-	if err := cmd.Start(); err != nil {
+	// The browser's lifetime is its own: the sign-in deadline stops the wait,
+	// not the window, so a sign-in that timed out can still ask the browser
+	// to close before the cleanup kills it.
+	procCtx, stopProcess := context.WithCancel(context.WithoutCancel(ctx))
+	log.Printf("sign-in window: opening %s", b.kind)
+	cmd := hostCommand(procCtx, b.path, b.windowArgs(profile, options.URL)...)
+	stop, err := startBrowser(cmd)
+	if err != nil {
+		stopProcess()
 		return "", fmt.Errorf("start the browser: %w", err)
 	}
 	exited := make(chan struct{})
@@ -168,23 +182,31 @@ func SignInWindow(ctx context.Context, options WindowOptions) (string, error) {
 		_ = cmd.Wait()
 		close(exited)
 	}()
-	// Whatever happens, the window does not outlive the sign-in. A Flatpak
-	// wrapper execs the browser, so its sandbox stays in the process group
-	// the deferred cancel kills.
+	// Whatever happens, the window does not outlive the sign-in: the browser
+	// is asked to close, then the job that holds it, and everything it
+	// started, is ended. A Flatpak wrapper execs the browser, so its sandbox
+	// stays in the process group the cleanup cancels.
 	defer func() {
-		cancel()
+		stop()
+		stopProcess()
 		<-exited
 	}()
 
-	w, err := b.open(ctx, profile, exited, read, options.retry)
+	w, err := b.open(ctx, procCtx, profile, exited, read, options.retry)
 	if err != nil {
+		log.Printf("sign-in window: %v", err)
 		return "", err
 	}
-	header, err := waitSignIn(ctx, w.read, options, exited)
+	// The polite close runs before the job ends the browser. It must not
+	// inherit the sign-in deadline: a sign-in that timed out still closes
+	// the window it opened.
+	defer w.quit(ctx)
+	header, err := waitSignIn(ctx, w.read, options, w.gone)
 	if err != nil {
+		log.Printf("sign-in window: %v", err)
 		return "", err
 	}
-	w.quit(ctx)
+	log.Printf("sign-in window: the session is read")
 	return header, nil
 }
 
@@ -323,20 +345,25 @@ func browserHoldsProfile(path string) bool {
 }
 
 // open returns the way to read the session of a browser started on profile,
-// once it is reachable. exited closes when the browser process ends. read is
-// the Firefox-family profile reader; a Chromium window does not use it.
-func (b candidate) open(ctx context.Context, profile string, exited <-chan struct{}, read profileReader, retry firefoxRetry) (*browserWindow, error) {
+// once it is reachable. ctx bounds the start; connCtx bounds the connection
+// to the browser, and outlives ctx so a sign-in that ran out of time can
+// still ask the browser to close. exited closes when the browser process
+// ends. read is the Firefox-family profile reader; a Chromium window does not
+// use it.
+func (b candidate) open(ctx, connCtx context.Context, profile string, exited <-chan struct{}, read profileReader, retry firefoxRetry) (*browserWindow, error) {
 	switch b.family {
 	case chromiumFamily:
 		port, path, err := waitDebugPort(ctx, profile, exited)
 		if err != nil {
 			return nil, err
 		}
-		ws, err := dialWS(ctx, net.JoinHostPort("127.0.0.1", port), path)
+		ws, err := dialWS(ctx, connCtx, net.JoinHostPort("127.0.0.1", port), path)
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("sign-in window: connected to the browser")
 		tools := &devtools{ws: ws}
+		announced := false
 		return &browserWindow{
 			read: func(ctx context.Context) (string, error) {
 				all, err := tools.cookies(ctx)
@@ -346,13 +373,18 @@ func (b candidate) open(ctx context.Context, profile string, exited <-chan struc
 				if !hasSession(all) {
 					return "", nil
 				}
+				if !announced {
+					log.Printf("sign-in window: the session appeared")
+					announced = true
+				}
 				return youtubeHeader(all, time.Now()), nil
 			},
 			quit: func(ctx context.Context) {
 				// A polite quit lets the browser write what it holds; the
 				// cookie is read already, so a slow one is stopped by the
-				// deferred cancel.
-				closeCtx, stop := context.WithTimeout(ctx, 2*time.Second)
+				// cleanup. The deadline of a sign-in that just failed must
+				// not stop it.
+				closeCtx, stop := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
 				tools.closeBrowser(closeCtx)
 				stop()
 				_ = ws.Close()
@@ -402,6 +434,7 @@ func (b candidate) open(ctx context.Context, profile string, exited <-chan struc
 				return cached, nil
 			},
 			quit: func(context.Context) {},
+			gone: exited,
 		}, nil
 	default:
 		panic("unknown browser family")
@@ -435,9 +468,12 @@ func readFirefox(ctx context.Context, read profileReader, profile string, exited
 
 // waitDebugPort waits for the browser to say where its debugging port is.
 // The browser writes DevToolsActivePort into the profile: the port, then the
-// path of the browser's endpoint.
+// path of the browser's endpoint. A browser that hands its window to another
+// process and exits still writes it, so the port gets a grace period after
+// the started process ends.
 func waitDebugPort(ctx context.Context, profile string, exited <-chan struct{}) (port, path string, err error) {
 	file := filepath.Join(profile, "DevToolsActivePort")
+	var exitedAt time.Time
 	for {
 		if data, readErr := os.ReadFile(file); readErr == nil {
 			lines := strings.Split(strings.TrimSpace(string(data)), "\n")
@@ -447,9 +483,16 @@ func waitDebugPort(ctx context.Context, profile string, exited <-chan struct{}) 
 				}
 			}
 		}
+		if !exitedAt.IsZero() && time.Since(exitedAt) >= debugPortGrace {
+			return "", "", errors.New("the browser quit before it opened the sign-in window")
+		}
 		select {
 		case <-exited:
-			return "", "", errors.New("the browser quit before it opened the sign-in window")
+			// A Chromium browser may hand the window to a new process and
+			// exit. Stop listening on the closed channel and keep looking
+			// for the port until the grace period ends.
+			exited = nil
+			exitedAt = time.Now()
 		case <-ctx.Done():
 			return "", "", windowContextError(ctx)
 		case <-time.After(100 * time.Millisecond):
@@ -458,8 +501,9 @@ func waitDebugPort(ctx context.Context, profile string, exited <-chan struct{}) 
 }
 
 // waitSignIn polls the window's session until a signed-in one shows and stays
-// for the settle time, then returns that Cookie header.
-func waitSignIn(ctx context.Context, read func(context.Context) (string, error), options WindowOptions, exited <-chan struct{}) (string, error) {
+// for the settle time, then returns that Cookie header. gone is the window
+// ending on its own, nil where a dropped connection says that instead.
+func waitSignIn(ctx context.Context, read func(context.Context) (string, error), options WindowOptions, gone <-chan struct{}) (string, error) {
 	var signedAt time.Time
 	for {
 		header, err := read(ctx)
@@ -480,7 +524,7 @@ func waitSignIn(ctx context.Context, read func(context.Context) (string, error),
 			}
 		}
 		select {
-		case <-exited:
+		case <-gone:
 			return "", ErrWindowClosed
 		case <-ctx.Done():
 			return "", windowContextError(ctx)

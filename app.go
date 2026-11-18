@@ -54,6 +54,9 @@ type app struct {
 	sleep func(ctx context.Context, delay time.Duration) error
 	// openURL opens a link in the default browser. Tests record it.
 	openURL func(url string) error
+	// focusWindow brings the app back to the front after a sign-in window
+	// closes. Tests record it.
+	focusWindow func()
 	// bundled reports whether a helper program is the one inside the app.
 	// Tests replace it.
 	bundled func(name string) bool
@@ -230,6 +233,7 @@ func newApp() *app {
 	}
 	a.sleep = sleep
 	a.openPath = func(path string) error { return a.desktop.openPath(path) }
+	a.focusWindow = func() { a.desktop.bringToFront() }
 	a.account = newAccountState(func(auth *youtube.CookieAuth) *youtube.Client {
 		return youtube.NewClient(youtube.Options{CookieAuth: auth})
 	}, cookies.Sources)

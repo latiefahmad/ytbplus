@@ -177,11 +177,18 @@ func (a *app) trySignIn(from sessionSource, timeout time.Duration, read func(con
 		}
 		return opened, acc.creds.saveForDialog(ctx, cookie, attempt)
 	}, func(opened *session, err error) {
+		// A session read from the app's own window leaves the user in that
+		// browser, so the window that answers them comes back to the front,
+		// whether the sign-in worked or says why it did not.
+		inWindow := s.inWindow
 		s.inWindow = false
 		if err != nil {
 			s.err = err.Error()
 			s.importFailed = from.browser
 			s.hostAccess = errors.Is(err, cookies.ErrNeedsHostAccess)
+			if inWindow {
+				a.focusWindow()
+			}
 			return
 		}
 		s.reset()
@@ -189,6 +196,14 @@ func (a *app) trySignIn(from sessionSource, timeout time.Duration, read func(con
 		// YouTube retires its cookie. A pasted session names none, which is
 		// also what forgets a browser the user has moved on from.
 		a.useSession(opened, from)
+		if inWindow {
+			a.focusWindow()
+			if name := opened.details.Name; name != "" {
+				a.notice = "Signed in as " + name
+			} else {
+				a.notice = "Signed in"
+			}
+		}
 	})
 }
 

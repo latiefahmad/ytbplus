@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **Signing in with a browser window comes back to ytbplus.** The window ytbplus opens now closes when the sign-in ends, including when it fails or times out, even on Windows where Edge can hand the window to another process. ytbplus comes back to the front and says which account signed in.
+
 ## [1.0.2] - 2026-11-05
 
 ### Changed

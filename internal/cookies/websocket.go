@@ -37,18 +37,20 @@ type wsConn struct {
 	client bool
 }
 
-// dialWS opens a WebSocket to a loopback address. ctx bounds the handshake
-// and ends the connection when it is done.
-func dialWS(ctx context.Context, addr, path string) (*wsConn, error) {
+// dialWS opens a WebSocket to a loopback address. ctx bounds the handshake,
+// and connCtx ends the connection when it is done. The two differ so a
+// sign-in that ran out of time can still ask the browser to close over the
+// same connection, which a cancelled ctx would have shut.
+func dialWS(ctx, connCtx context.Context, addr, path string) (*wsConn, error) {
 	var dialer net.Dialer
 	conn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 	ws := &wsConn{conn: conn, r: bufio.NewReader(conn), client: true}
-	// The connection ends with ctx, so a cancelled sign-in cannot leave a
-	// read waiting.
-	context.AfterFunc(ctx, func() { conn.Close() })
+	// The connection ends with connCtx, so the caller that stops the browser
+	// cannot leave a read waiting on one it no longer owns.
+	context.AfterFunc(connCtx, func() { conn.Close() })
 	if err := ws.handshake(ctx, addr, path); err != nil {
 		conn.Close()
 		return nil, err
@@ -89,15 +91,24 @@ func wsAccept(key string) string {
 func (w *wsConn) Close() error { return w.conn.Close() }
 
 // limit holds reads and writes to ctx's deadline, and returns what lifts the
-// limit again. A deadline that cannot be set leaves the connection to ctx's
-// cancellation, which closes it.
+// limit again. Cancelling ctx ends the I/O at once: a connection that outlives
+// the sign-in, so the browser can still be asked to close, must not let a read
+// wait out a deadline nobody wants any more.
 func (w *wsConn) limit(ctx context.Context) (lift func()) {
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return func() {}
+	if deadline, ok := ctx.Deadline(); ok {
+		_ = w.conn.SetDeadline(deadline)
 	}
-	_ = w.conn.SetDeadline(deadline)
-	return func() { _ = w.conn.SetDeadline(time.Time{}) }
+	done := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() {
+		_ = w.conn.SetDeadline(time.Now())
+		close(done)
+	})
+	return func() {
+		if !stop() {
+			<-done
+		}
+		_ = w.conn.SetDeadline(time.Time{})
+	}
 }
 
 // writeText sends one text message.

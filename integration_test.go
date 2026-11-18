@@ -1475,6 +1475,8 @@ func TestSignInWithABrowserWindow(t *testing.T) {
 	a.account.window = func(context.Context) (string, error) { return "", cookies.ErrWindowClosed }
 	// An earlier import from a browser must not outlive a window sign-in.
 	a.settings.SignInSource = "Fakefox"
+	focused := 0
+	a.focusWindow = func() { focused++ }
 	a.openSignIn()
 	tt := ui.NewTester(a.view, 1000, 900)
 	tt.Frame()
@@ -1489,6 +1491,9 @@ func TestSignInWithABrowserWindow(t *testing.T) {
 	if a.signedIn() || !tt.HasText(cookies.ErrWindowClosed.Error()) {
 		t.Fatalf("a closed window did not say so: signedIn=%v %q", a.signedIn(), tt.Texts())
 	}
+	if focused != 1 {
+		t.Errorf("a failed window sign-in left the app in the background: focus calls = %d", focused)
+	}
 	if tt.HasText("Importing from") {
 		t.Error("a window that failed points at importing from a browser")
 	}
@@ -1500,6 +1505,12 @@ func TestSignInWithABrowserWindow(t *testing.T) {
 	tt.Frame()
 	if !a.signedIn() || a.account.signIn.open {
 		t.Fatalf("the window did not sign in: signedIn=%v open=%v err=%q", a.signedIn(), a.account.signIn.open, a.account.signIn.err)
+	}
+	if focused != 2 {
+		t.Errorf("a successful window sign-in did not bring the app forward: focus calls = %d", focused)
+	}
+	if !tt.HasText("Signed in as") {
+		t.Errorf("the sign-in did not confirm itself: %q", tt.Texts())
 	}
 	if got := a.settings.SignInSource; got != "" {
 		t.Errorf("the session names the browser %q, which would be read again when it goes stale", got)

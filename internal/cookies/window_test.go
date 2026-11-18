@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -30,10 +31,27 @@ func TestMain(m *testing.M) {
 
 // fakeBrowser serves the one DevTools command the sign-in uses. "signin"
 // shows a signed-out page for two reads and then a signed-in one; "quit"
-// goes away on the first read, as a window the user closed does. "firefox"
+// goes away on the first read, as a window the user closed does. "stall"
+// never answers a read, as a browser that stopped responding does. "firefox"
 // writes the cookie database of a profile and waits to be killed;
 // "firefox-quit" exits at once, or after YTBPLUS_FAKE_BROWSER_WAIT exists.
+// "handoff" starts a "signin" copy of itself and exits, as Edge does when it
+// hands the window to another process.
 func fakeBrowser(mode string, args []string) {
+	if mode == "handoff" {
+		child := exec.Command(os.Args[0], args...)
+		for _, kv := range os.Environ() {
+			if strings.HasPrefix(kv, "YTBPLUS_FAKE_BROWSER=") {
+				continue
+			}
+			child.Env = append(child.Env, kv)
+		}
+		child.Env = append(child.Env, "YTBPLUS_FAKE_BROWSER=signin")
+		if err := child.Start(); err != nil {
+			os.Exit(2)
+		}
+		os.Exit(0)
+	}
 	if mode == "firefox" || mode == "firefox-quit" {
 		profile := valueAfter(args, "-profile")
 		if profile == "" {
@@ -70,6 +88,13 @@ func fakeBrowser(mode string, args []string) {
 	if err := os.WriteFile(os.Getenv("YTBPLUS_FAKE_BROWSER_PROFILE"), []byte(profile), 0o600); err != nil {
 		os.Exit(2)
 	}
+	// A delayed start lets a test see the process exit before the port
+	// appears, as a browser that hands its window off does.
+	if delay := os.Getenv("YTBPLUS_FAKE_BROWSER_DELAY"); delay != "" {
+		if d, err := time.ParseDuration(delay); err == nil {
+			time.Sleep(d)
+		}
+	}
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		os.Exit(2)
@@ -104,6 +129,9 @@ func fakeBrowser(mode string, args []string) {
 		_ = json.Unmarshal(raw, &msg)
 		switch msg.Method {
 		case "Storage.getCookies":
+			if mode == "stall" {
+				continue
+			}
 			reads++
 			if mode == "quit" {
 				os.Exit(0)
@@ -119,6 +147,9 @@ func fakeBrowser(mode string, args []string) {
 			reply, _ := json.Marshal(map[string]any{"id": msg.ID, "result": map[string]any{"cookies": cookies}})
 			_ = ws.writeText(reply)
 		case "Browser.close":
+			if marker := os.Getenv("YTBPLUS_FAKE_BROWSER_CLOSED"); marker != "" {
+				_ = os.WriteFile(marker, nil, 0o600)
+			}
 			reply, _ := json.Marshal(map[string]any{"id": msg.ID, "result": map[string]any{}})
 			_ = ws.writeText(reply)
 			os.Exit(0)
@@ -207,6 +238,73 @@ func TestSignInWindowStopsWhenCancelled(t *testing.T) {
 	}
 	if time.Since(start) > 10*time.Second {
 		t.Errorf("cancel took %v to stop the window", time.Since(start))
+	}
+}
+
+// Cancelling must stop the window even when the browser has stopped
+// answering: the connection outlives the sign-in so the browser can still be
+// asked to close, and it must not leave the read waiting out the sign-in
+// deadline.
+func TestSignInWindowStopsWhenABrowserStopsAnswering(t *testing.T) {
+	options := fakeWindow(t, "stall")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	timer := time.AfterFunc(300*time.Millisecond, cancel)
+	defer timer.Stop()
+	start := time.Now()
+	if _, err := SignInWindow(ctx, options); err == nil {
+		t.Fatal("a cancelled sign-in succeeded")
+	}
+	if waited := time.Since(start); waited > 10*time.Second {
+		t.Errorf("cancel took %v to stop a silent browser", waited)
+	}
+}
+
+// The browser this app starts may hand its window to another process and
+// exit, which Edge does on Windows. The sign-in must follow the window, not
+// the first process, and still read the session.
+func TestSignInWindowFollowsAWindowTheBrowserHandedOff(t *testing.T) {
+	options := fakeWindow(t, "handoff")
+	// The port appears well after the started process is gone, as it does
+	// when a browser starts the window in another process.
+	t.Setenv("YTBPLUS_FAKE_BROWSER_DELAY", "400ms")
+	got, err := SignInWindow(context.Background(), options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "SAPISID=live; SID=session; LOGIN_INFO=li"; got != want {
+		t.Errorf("header = %q, want %q", got, want)
+	}
+	profile, err := os.ReadFile(os.Getenv("YTBPLUS_FAKE_BROWSER_PROFILE"))
+	if err != nil || len(profile) == 0 {
+		t.Fatalf("the browser was not started with a profile: %v", err)
+	}
+	if _, err := os.Stat(string(profile)); !os.IsNotExist(err) {
+		t.Errorf("the profile %s was left behind: %v", profile, err)
+	}
+}
+
+// A failed sign-in still closes the window it opened, so the user is not left
+// in a browser that ytbplus started and no longer watches.
+func TestSignInWindowClosesTheBrowserWhenTheSignInFails(t *testing.T) {
+	options := fakeWindow(t, "signin")
+	options.Settle = time.Hour
+	closed := filepath.Join(t.TempDir(), "closed")
+	t.Setenv("YTBPLUS_FAKE_BROWSER_CLOSED", closed)
+	ctx, cancel := context.WithTimeout(context.Background(), 400*time.Millisecond)
+	defer cancel()
+	if _, err := SignInWindow(ctx, options); err == nil {
+		t.Fatal("a sign-in that ran out of time succeeded")
+	}
+	if _, err := os.Stat(closed); err != nil {
+		t.Errorf("the browser was not asked to close: %v", err)
+	}
+	profile, err := os.ReadFile(os.Getenv("YTBPLUS_FAKE_BROWSER_PROFILE"))
+	if err != nil || len(profile) == 0 {
+		t.Fatalf("the browser was not started with a profile: %v", err)
+	}
+	if _, err := os.Stat(string(profile)); !os.IsNotExist(err) {
+		t.Errorf("the profile %s was left behind: %v", profile, err)
 	}
 }
 

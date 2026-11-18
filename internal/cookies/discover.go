@@ -34,9 +34,14 @@ type browserWindow struct {
 	// connection drops, which is how a window the user closed shows; a
 	// Firefox read fails when the profile cannot be read.
 	read func(ctx context.Context) (string, error)
-	// quit lets the browser close politely before the deferred cancel stops
-	// it. A browser with no remote close does nothing here.
+	// quit lets the browser close politely before the cleanup stops it. A
+	// browser with no remote close does nothing here.
 	quit func(ctx context.Context)
+	// gone closes when the browser is certainly gone on its own, as a
+	// closed Firefox profile is. A Chromium window leaves it nil: a dropped
+	// DevTools connection is what says it closed, because the process that
+	// started the browser may exit while another one keeps the window.
+	gone <-chan struct{}
 }
 
 // candidate is a browser that may open the sign-in window.
