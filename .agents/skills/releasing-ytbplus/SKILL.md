@@ -21,6 +21,12 @@ Prepare and publish a ytbplus release using the repository's version tags and Gi
 2. Review every commit since the previous `ytbplus-vX.Y.Z` tag. Add concise,
    user-facing notes for shipped changes under `## [Unreleased]` in
    `CHANGELOG.md`; do not list refactors or CI-only changes.
+
+   The landing page mirrors the changelog by hand, so update it in the same
+   pass: bump `version` in `website/src/data/releases.ts` and add the
+   release's entries to its `changelog` list, newest first, in the page's
+   wording. Add any published release that is missing while you are in the
+   file. The site deploys from the same push.
 3. Test the release-preparation helper against its isolated fixture before
    using it on repository files. Python bytecode is disabled so the skill tree
    stays clean:

@@ -1,6 +1,6 @@
 // The releases the page offers. Versions and asset names come from the
 // workflow, so the download links point at files that really exist.
-export const version = "1.0.2";
+export const version = "1.1.0";
 export const repo = "https://github.com/latiefahmad/ytbplus";
 export const releases = `${repo}/releases`;
 
@@ -82,6 +82,40 @@ export const platforms: Platform[] = [
 export type Change = { kind: "Added" | "Changed" | "Fixed" | "Removed"; items: string[] };
 
 export const changelog: { version: string; date: string; changes: Change[] }[] = [
+  {
+    version: "1.1.0",
+    date: "18 November 2026",
+    changes: [
+      {
+        kind: "Added",
+        items: [
+          "Search suggestions work from the keyboard. Up and Down highlight a suggestion, and Enter searches or opens it instead of searching the text typed.",
+          "Copy a track's title or artist. The song menu's Copy entry offers both beside Copy link, and says what it copied.",
+        ],
+      },
+      {
+        kind: "Fixed",
+        items: [
+          "Skipping a track stops its yt-dlp lookup. A track you skip no longer leaves yt-dlp running in the background, so skipping quickly stays light on the network and the battery.",
+          "ytbplus keeps its place when the computer ends the session. Signing out, restarting or shutting down saves the queue, the position and the settings instead of losing the last changes.",
+          "No track notification while ytbplus is in front. The window already shows the track, so the notification waits until you are in another app, and the previous track's notification goes.",
+          "A default Zen browser on Windows no longer sends sign-in to Firefox. ytbplus recognizes Zen and keeps the sign-in window in Chrome.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "1.0.3",
+    date: "18 November 2026",
+    changes: [
+      {
+        kind: "Fixed",
+        items: [
+          "Signing in with a browser window comes back to ytbplus. The window ytbplus opens now closes when the sign-in ends, including when it fails or times out, even on Windows where Edge can hand the window to another process. ytbplus comes back to the front and says which account signed in.",
+        ],
+      },
+    ],
+  },
   {
     version: "1.0.2",
     date: "5 November 2026",
