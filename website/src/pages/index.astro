@@ -516,10 +516,14 @@ const marquee = ["~100 MB memory", "No ads", "Synced lyrics", "Colours per song"
         --line: #14121a;
         --line-soft: #d9cfbf;
         --ink: #14121a;
+        /* The feature tiles keep their pastel in both themes, so their icons
+           need an ink that stays dark in both themes too. */
+        --tile-ink: #14121a;
         --muted: #57504b;
         --accent: #8b5cf6;
         --accent-deep: #7c3aed;
-        --accent-ink: #14121a;
+        /* Just below black, so text on the purple clears AA. */
+        --accent-ink: #0b0910;
         --accent-text: #6d28d9;
         --paper: #fffdf7;
         --hard: #14121a;
@@ -746,6 +750,7 @@ const marquee = ["~100 MB memory", "No ads", "Synced lyrics", "Colours per song"
         white-space: nowrap;
       }
       .marquee-track i { font-style: normal; opacity: 0.55; }
+      html[data-theme="dark"] .marquee-track i { opacity: 0.8; }
       @keyframes marquee { to { transform: translateX(-50%); } }
 
       /* ---------- sections ---------- */
@@ -809,7 +814,7 @@ const marquee = ["~100 MB memory", "No ads", "Synced lyrics", "Colours per song"
         background: var(--tile);
         box-shadow: 3px 3px 0 var(--hard);
       }
-      .feature-icon svg { width: 24px; height: 24px; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .feature-icon svg { width: 24px; height: 24px; fill: none; stroke: var(--tile-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .feature h3 { font-size: 19px; letter-spacing: -0.015em; margin-bottom: 8px; font-weight: 800; }
       .feature p { color: var(--muted); font-size: 15.5px; line-height: 1.6; }
 
@@ -944,7 +949,7 @@ const marquee = ["~100 MB memory", "No ads", "Synced lyrics", "Colours per song"
         box-shadow: var(--shadow-big);
       }
       .support-card h2 { color: inherit; }
-      .support-card p { max-width: 56ch; margin-top: 10px; opacity: 0.9; }
+      .support-card p { max-width: 56ch; margin-top: 10px; }
       .support-card .btn { border-color: #14121a; box-shadow: 5px 5px 0 #14121a; }
       .support-card .btn:hover { box-shadow: 7px 7px 0 #14121a; }
       .support-card .btn:active { box-shadow: 1px 1px 0 #14121a; }
@@ -988,6 +993,9 @@ const marquee = ["~100 MB memory", "No ads", "Synced lyrics", "Colours per song"
       html[data-theme="dark"] .site-foot { background: #0e0d13; }
       .site-foot .foot-col a { color: #a89fbd; }
       .site-foot .foot-col a:hover { color: #c9bbff; }
+      /* A button is not a footer link: it keeps its yellow and dark ink. */
+      .site-foot .foot-col a.btn { color: #14121a; }
+      .site-foot .foot-col a.btn:hover { color: #14121a; }
       .site-foot .foot-col p { color: #a89fbd; }
       .site-foot .foot-col p a { color: #f2effa; }
       .foot-cta {
@@ -1015,7 +1023,7 @@ const marquee = ["~100 MB memory", "No ads", "Synced lyrics", "Colours per song"
       .foot-brand strong { font-size: 18px; letter-spacing: -0.02em; }
       .foot-col p { font-size: 14.5px; line-height: 1.6; margin-bottom: 12px; }
       .foot-col p a { text-underline-offset: 3px; font-weight: 700; }
-      .foot-fine { font-size: 12.5px !important; opacity: 0.7; }
+      .foot-fine { font-size: 12.5px !important; opacity: 0.85; }
       .foot-col h3 {
         font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.1em;
         color: #f2effa; margin-bottom: 16px; font-weight: 800;
