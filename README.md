@@ -77,6 +77,10 @@ Material 3 Expressive, which the official app still isn't.
   lyrics light each word. ytbplus takes them from Better Lyrics, YouTube Music
   or LRCLIB, and you can switch to plain text.
 - **Music that keeps going.** When your queue ends, ytbplus adds similar songs.
+- **Block artists.** Block an artist from a song's menu or their page, and
+  ytbplus skips their songs and keeps them out of your queue and
+  recommendations. Songs that only feature them still play, and you can
+  unblock them in Settings.
 - **Pick up where you left off.** Your queue and song are waiting next time.
 
 ### Your account and library
@@ -99,6 +103,8 @@ Material 3 Expressive, which the official app still isn't.
 - **Zoom** from 80% to 200%.
 - **Last.fm scrobbling**, pausable any time, and **listening stats** kept on
   your computer and clearable whenever you like.
+- **Listening history**, grouped by day, and merged with your YouTube Music
+  account history when you are signed in.
 
 ### Desktop niceties
 
@@ -135,7 +141,7 @@ Windows need no choice — one `.dmg` covers Apple Silicon and Intel, and the
 Windows builds are `amd64`.
 
 **3. Take a full build unless you know you want minimal.** Files with
-`-minimal` expect `ffmpeg`, `yt-dlp`, and Node.js or Bun already on your
+`-minimal` expect `ffmpeg`, `yt-dlp`, and Node.js already on your
 `PATH`, and they break playback without them. If you use one, keep `yt-dlp`
 current.
 
@@ -235,7 +241,7 @@ update the `yt-dlp` on your `PATH` if you use a minimal build.
 <summary><b>ffmpeg or yt-dlp problems</b></summary>
 
 The full build bundles both. The minimal build needs `ffmpeg`, `yt-dlp`, and
-Node.js or Bun on `PATH`. Run `ffmpeg -version` and `yt-dlp --version` to check
+Node.js on `PATH`. Run `ffmpeg -version` and `yt-dlp --version` to check
 them; the log header shows which versions ytbplus found.
 
 </details>
@@ -318,7 +324,8 @@ be turned off in Settings.
 What stays on your device:
 
 - **Settings, listening history and playback state** in the app's user data
-  folder. Settings has a button to clear the history.
+  folder. The history is used for History and the stats, and Settings has a
+  button to clear it.
 - **Your session**, and **your Last.fm session**, each in a file only your user
   can read and encrypted with a key in the system credential store — the
   Keychain on macOS, the Secret Service on Linux, the Credential Manager on
@@ -357,7 +364,7 @@ version from `.bazelversion`.
 ```sh
 bazel run //:dev                                    # live reload; ffmpeg and yt-dlp on PATH
 bazel run //:dist -- --run linux-amd64              # production build with bundled tools, then open it
-bazel run //:dist -- --run --minimal linux-amd64    # build against system ffmpeg, yt-dlp, and Node.js/Bun
+bazel run //:dist -- --run --minimal linux-amd64    # build against system ffmpeg, yt-dlp, and Node.js
 ```
 
 `bazel run //:dist -- <platform>` builds into `build/<platform>/`. The
@@ -390,7 +397,7 @@ in the [non-goals](#non-goals).
 - [ffmpeg](https://ffmpeg.org) decodes the audio,
   [yt-dlp](https://github.com/yt-dlp/yt-dlp) finds the streams, and
   [QuickJS](https://github.com/quickjs-ng/quickjs) runs the JavaScript yt-dlp
-  needs to solve YouTube's challenges when Node or Bun is not installed. The
+  needs to solve YouTube's challenges when Node is not installed. The
   full build ships all three; the minimal build leaves them to the system. See
   [`resources/THIRD-PARTY-NOTICES.md`](resources/THIRD-PARTY-NOTICES.md).
 - [Google Sans](https://github.com/googlefonts/googlesans) sets the text, under

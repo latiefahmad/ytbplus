@@ -126,6 +126,29 @@ func TestListenQualifiesOnceTheLengthIsKnown(t *testing.T) {
 	}
 }
 
+// TestListenKeepsTimeBeforeTheTrackIsNamed covers a track whose artist the app
+// learns a moment after playback starts: the listening before the name arrives
+// counts, Started waits for it, and the play keeps the time it really began.
+func TestListenKeepsTimeBeforeTheTrackIsNamed(t *testing.T) {
+	p := newPlayer(3*time.Minute, Track{Title: "T"}, true)
+	p.play(30 * time.Second)
+	if len(p.events) != 0 {
+		t.Fatalf("events = %v, want none until the artist is known", p.events)
+	}
+	if got := p.l.Started(); !got.Equal(t0.Add(250 * time.Millisecond)) {
+		t.Fatalf("Started = %s, want the first sample", got)
+	}
+	p.l.Track = song
+	p.play(time.Second)
+	if count(p.events, Started) != 1 {
+		t.Fatalf("events = %v, want Started when the artist arrives", p.events)
+	}
+	p.play(time.Minute)
+	if count(p.events, Qualified) != 1 {
+		t.Errorf("events = %v after %s, want the play to qualify at half", p.events, p.l.Listened())
+	}
+}
+
 func TestListenPausedTimeDoesNotCount(t *testing.T) {
 	p := newPlayer(3*time.Minute, song, true)
 	p.play(60 * time.Second)

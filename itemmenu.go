@@ -153,6 +153,17 @@ func (a *app) songMenu(c *ui.Context, anchor ui.Element, key string, item youtub
 				close()
 			}
 		}
+		if artistID, name := item.PrimaryArtist(); artistID != "" {
+			if a.artistIsBlocked(artistID) {
+				if entry("Unblock artist", m3.IconBlock).Clicked() {
+					a.unblockArtist(artistID)
+					close()
+				}
+			} else if entry("Block artist", m3.IconBlock).Clicked() {
+				a.blockArtist(artistID, name)
+				close()
+			}
+		}
 		if o.list == "queue" {
 			a.queueMenuItems(c, o.position, close)
 		} else {

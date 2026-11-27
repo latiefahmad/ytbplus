@@ -28,6 +28,11 @@ func CompactSwitch(c *ui.Context, on *bool, label string) ui.Element {
 	return switchWithTrack(c, on, label, 48, 28)
 }
 
+// MiniSwitch is CompactSwitch for the mini player's narrow window.
+func MiniSwitch(c *ui.Context, on *bool, label string) ui.Element {
+	return switchWithTrack(c, on, label, 40, 24)
+}
+
 func switchWithTrack(c *ui.Context, on *bool, label string, trackWidth, trackHeight float32) ui.Element {
 	sc := Of(c).Scheme
 	s := ui.SwitchBase(c.Key("switch-"+label), on).Size(max(trackWidth, MinTarget), MinTarget).Margin(-slop(trackHeight), 0).Label(label).

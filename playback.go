@@ -114,7 +114,7 @@ func (a *app) playFrom(item youtube.MusicItem, tracks []youtube.MusicItem, index
 	}
 	a.clearQueueSelection()
 	a.queue.replace(item, tracks, index, source)
-	if a.settings.ExcludeAIGenerated {
+	if a.filtering() {
 		a.queue.dropMarkedAI(a.excludesItem)
 	}
 	clear(a.scrobble.queued) // the queue they were added to is gone
@@ -181,12 +181,14 @@ func (a *app) startTrack(item youtube.MusicItem, automatic bool) {
 }
 
 // startTrackNow finds the chosen track's audio after the AI check lets it
-// through, retaining its original start position and history transition.
+// through, retaining its original start position and history transition. The
+// play is a new one even when the same track plays again, so a repeat is
+// recorded as a play of its own.
 func (a *app) startTrackNow(item youtube.MusicItem, startAt time.Duration, changed bool) {
 	// The old stream is stopped by the work that finds the new one: stopping
 	// kills ffmpeg and waits for the audio device, which is not for the main
 	// thread to do.
-	a.streamAudio(item, startAt, changed)
+	a.streamAudio(item, startAt, changed, true)
 	a.afterEnter(item, changed)
 }
 
@@ -303,7 +305,8 @@ func (a *app) enqueue(item youtube.MusicItem, playNext bool) {
 		return
 	}
 	if a.excludesItem(item) {
-		a.notice = "Skipped " + item.Title + ": YouTube marks it as made with AI"
+		_, why := a.excludedReason(item)
+		a.notice = "Skipped " + item.Title + ": " + why
 		return
 	}
 	if a.current.VideoID == "" || a.queue.len() == 0 {

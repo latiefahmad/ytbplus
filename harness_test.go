@@ -43,7 +43,12 @@ var (
 	searchAsked      atomic.Value
 	fakePageID       atomic.Value
 	libraryLoads     atomic.Int32
-	playlistCreates  atomic.Int32
+	// historyLoads counts the account-history reads the fake has answered,
+	// and historyFails makes it answer them as YouTube answers a request
+	// that goes wrong.
+	historyLoads    atomic.Int32
+	historyFails    atomic.Bool
+	playlistCreates atomic.Int32
 	// playlistDeletes counts the playlists the fake has been asked to delete.
 	playlistDeletes atomic.Int32
 	// likeWrites counts the like writes the fake has been asked for, and
@@ -161,6 +166,8 @@ func (fakeMusic) RoundTrip(request *http.Request) (*http.Response, error) {
 		reply = songRelatedNextResponse
 	case strings.Contains(asked, "MPTRsong-related"):
 		reply = songRelatedResponse
+	case strings.Contains(asked, "MPREb_blocked"):
+		reply = blockedAlbumPage()
 	case strings.Contains(asked, "MPREb_ai_run"):
 		reply = aiRunAlbumPage()
 	case strings.Contains(asked, "MPREb_ai"):
@@ -176,6 +183,12 @@ func (fakeMusic) RoundTrip(request *http.Request) (*http.Response, error) {
 	case strings.Contains(asked, "FEmusic_library_landing"):
 		libraryLoads.Add(1)
 		reply = libraryPage()
+	case strings.Contains(asked, "FEmusic_history"):
+		historyLoads.Add(1)
+		reply = historyResponse
+		if historyFails.Load() {
+			reply, status = rejectedResponse, http.StatusInternalServerError
+		}
 	case strings.HasSuffix(request.URL.Path, "/playlist/create"):
 		playlistCreates.Add(1)
 		recordWrite(request.URL.Path, asked)
@@ -246,6 +259,42 @@ const subscribeResponse = `{"responseContext":{},"actions":[{"updateSubscribeBut
 
 // rejectedResponse is what YouTube answers a write it rejects.
 const rejectedResponse = `{"error":{"code":400,"message":"Request contains an invalid argument.","status":"INVALID_ARGUMENT"}}`
+
+// historyResponse is the account history the fake YouTube answers FEmusic_history
+// with: shelves named by day, as YouTube names them.
+const historyResponse = `{"contents":{"singleColumnBrowseResultsRenderer":{"tabs":[{"tabRenderer":{"content":{"sectionListRenderer":{"contents":[
+	{"musicShelfRenderer":{"title":{"runs":[{"text":"Today"}]},"contents":[
+		{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"phone-today"},"flexColumns":[
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Today"}]}}},
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Artist"}]}}}],
+			"thumbnail":{"thumbnails":[{"url":"phone-today.png"}]},
+			"fixedColumns":[{"musicResponsiveListItemFixedColumnRenderer":{"text":{"runs":[{"text":"3:00"}]}}}]}},
+		{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"shared-today"},"flexColumns":[
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Shared Today"}]}}},
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Shared Artist"}]}}}]}}
+	]}},
+	{"musicShelfRenderer":{"title":{"runs":[{"text":"Yesterday"}]},"contents":[
+		{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"phone-yesterday"},"flexColumns":[
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Yesterday"}]}}},
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Artist"}]}}}],
+			"thumbnail":{"thumbnails":[{"url":"phone-yesterday.png"}]},
+			"fixedColumns":[{"musicResponsiveListItemFixedColumnRenderer":{"text":{"runs":[{"text":"2:40"}]}}}]}}
+	]}},
+	{"musicShelfRenderer":{"title":{"runs":[{"text":"This week"}]},"contents":[
+		{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"phone-week"},"flexColumns":[
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Week"}]}}},
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Artist"}]}}}],
+			"thumbnail":{"thumbnails":[{"url":"phone-week.png"}]},
+			"fixedColumns":[{"musicResponsiveListItemFixedColumnRenderer":{"text":{"runs":[{"text":"2:20"}]}}}]}}
+	]}},
+	{"musicShelfRenderer":{"title":{"runs":[{"text":"Last month"}]},"contents":[
+		{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"phone-old"},"flexColumns":[
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Old"}]}}},
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Phone Artist"}]}}}],
+			"thumbnail":{"thumbnails":[{"url":"phone-old.png"}]},
+			"fixedColumns":[{"musicResponsiveListItemFixedColumnRenderer":{"text":{"runs":[{"text":"2:00"}]}}}]}}
+	]}}
+]}}}}]}}}`
 
 // nextResponse is what YouTube answers for the track vid-3 in the player: the
 // track itself, first in the panel, with the like button its menu carries.
@@ -623,6 +672,8 @@ func resetFakes() {
 	playlistDeletes.Store(0)
 	subscribeWrites.Store(0)
 	homeMoreRequests.Store(0)
+	historyLoads.Store(0)
+	historyFails.Store(false)
 	aiChecks.Store(0)
 	refuseWrites.Store(false)
 	duplicateWrites.Store(false)
@@ -1073,4 +1124,26 @@ func paginatedPlaylistResponse(start, end int, next, suggestions string) string 
 		kind = "musicPlaylistShelfContinuation"
 	}
 	return fmt.Sprintf(`{"contents":{"%s":{"contents":[%s],"continuations":[{"nextContinuationData":{"continuation":%q}}]}},"continuations":[{"nextContinuationData":{"continuation":%q}}]}`, kind, strings.Join(items, ","), next, suggestions)
+}
+
+// blockedAlbumPage lists a song by UCbad, a song by UCgood that features
+// UCbad, and a song by UCgood alone.
+func blockedAlbumPage() string {
+	song := func(id, title string, artists ...[2]string) string {
+		var runs []string
+		for i, artist := range artists {
+			if i > 0 {
+				runs = append(runs, `{"text":" & "}`)
+			}
+			runs = append(runs, fmt.Sprintf(`{"text":%q,"navigationEndpoint":{"browseEndpoint":{"browseId":%q}}}`, artist[0], artist[1]))
+		}
+		return fmt.Sprintf(`{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":%q},"flexColumns":[
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":%q}]}}},
+			{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[%s,{"text":" • "},{"text":"3:00"}]}}}
+		]}}`, id, title, strings.Join(runs, ","))
+	}
+	return `{"header":{"musicResponsiveHeaderRenderer":{"title":{"runs":[{"text":"Mixed Credits"}]}}},"contents":{"musicShelfRenderer":{"contents":[` +
+		song("bad-song", "Blocked Song", [2]string{"Bad Artist", "UCbad"}) + "," +
+		song("feature-song", "Feature Song", [2]string{"Good Artist", "UCgood"}, [2]string{"Bad Artist", "UCbad"}) + "," +
+		song("good-song", "Good Song", [2]string{"Good Artist", "UCgood"}) + `]}}}`
 }

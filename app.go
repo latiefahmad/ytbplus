@@ -142,13 +142,17 @@ type app struct {
 	knownPlaylists knownPlaylists
 
 	playback
-	aiFilter   aiFilterState
-	nowPlaying nowPlayingState
-	notch      notchState
+	aiFilter aiFilterState
+	// blockedVersion changes when the blocked-artist list does, so cached
+	// rows are built again and the songs involved are left in or out.
+	blockedVersion uint64
+	nowPlaying     nowPlayingState
+	notch          notchState
 
 	// The local listening history and the stats page built from it.
 	historyPath    string
 	history        []history.Entry
+	historyRev     int // changes whenever the plays or the account history do
 	historyLoaded  bool
 	historyLoading bool
 	// historyDiscard drops the plays the read in flight brings: the user
@@ -158,6 +162,7 @@ type app struct {
 	// until they confirm or keep it.
 	confirmClearHistory bool
 	historyWriter       history.Writer
+	historyRemote       remoteHistoryState
 	statsRange          int // days the stats page covers: 7, 14 or 30
 	stats               statsMemo
 

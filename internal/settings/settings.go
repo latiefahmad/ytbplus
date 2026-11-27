@@ -53,6 +53,9 @@ type Settings struct {
 	// ExcludeAIGenerated skips songs YouTube marks as altered or generated
 	// with AI. Unlabelled AI music still plays.
 	ExcludeAIGenerated bool `json:"excludeAIGenerated,omitempty"`
+	// BlockedArtists are the artists whose songs never play. Only the first
+	// artist credited on a song counts, so one who only features still plays.
+	BlockedArtists []BlockedArtist `json:"blockedArtists,omitempty"`
 	// NormalizeLoudness applies YouTube's per-track loudness correction when signed in.
 	NormalizeLoudness bool `json:"normalizeLoudness"`
 	// CacheSongs is how many recently played audio files to keep on disk.
@@ -98,6 +101,9 @@ type Settings struct {
 	CloseToTray *bool `json:"closeToTray,omitempty"`
 	// OpenAtLogin starts ytbplus when the user logs in.
 	OpenAtLogin bool `json:"openAtLogin"`
+	// WavyProgress draws the position slider as a wave that travels while
+	// music plays; off keeps it a flat line.
+	WavyProgress bool `json:"wavyProgress"`
 	// LastFMUser is the Last.fm account plays are scrobbled to, or empty when
 	// none is connected. Its session key is not kept here: see
 	// secretfile.File.
@@ -123,6 +129,18 @@ type Settings struct {
 	MusicSpeed   float64 `json:"musicSpeed,omitempty"`
 }
 
+// BlockedArtist is an artist whose songs ytbplus does not play. The name is
+// only for showing the list; the ID is what a song is matched against.
+type BlockedArtist struct {
+	ID   string `json:"id"`
+	Name string `json:"name,omitempty"`
+}
+
+// ArtistBlocked reports whether the artist with this channel ID is blocked.
+func (s *Settings) ArtistBlocked(id string) bool {
+	return id != "" && slices.ContainsFunc(s.BlockedArtists, func(b BlockedArtist) bool { return b.ID == id })
+}
+
 // TrayMark names one of the menu bar icon styles.
 type TrayMark string
 
@@ -137,7 +155,7 @@ const (
 func Defaults() Settings {
 	return Settings{
 		Seed: "#6750a4", Mode: "system", Volume: 70, AutoPlay: true, CacheSongs: audio.DefaultLimit, NotifyTrack: runtime.GOOS != "darwin", ShowTray: runtime.GOOS != "darwin", TrayMark: TrayMarkWordmark,
-		Zoom: DefaultZoom, ShowNotch: true, CrossfadeSeconds: DefaultCrossfade,
+		Zoom: DefaultZoom, ShowNotch: true, CrossfadeSeconds: DefaultCrossfade, WavyProgress: true,
 	}
 }
 
@@ -185,6 +203,7 @@ func (s *Settings) clone() Settings {
 	c := *s
 	c.Recent = slices.Clone(s.Recent)
 	c.Shortcuts = maps.Clone(s.Shortcuts)
+	c.BlockedArtists = slices.Clone(s.BlockedArtists)
 	return c
 }
 
@@ -308,6 +327,9 @@ func Parse(data []byte) (Settings, error) {
 		read.NotifyTrack, read.ShowTray = false, false
 	}
 	read.CrossfadeSeconds = ClampCrossfade(read.CrossfadeSeconds)
+	// An entry with no ID matches no song, so a hand-edited file cannot leave
+	// one behind in the list.
+	read.BlockedArtists = slices.DeleteFunc(read.BlockedArtists, func(b BlockedArtist) bool { return b.ID == "" })
 	return read, nil
 }
 

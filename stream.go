@@ -42,8 +42,10 @@ type resolvedAudio struct {
 }
 
 // streamAudio finds a track's audio off the main thread, in the cache or
-// with yt-dlp, and plays it.
-func (a *app) streamAudio(item youtube.MusicItem, startAt time.Duration, changed bool) {
+// with yt-dlp, and plays it. changed says the track is another than the one
+// before; newPlay says this is a play of its own, even when it is the same
+// track again, so a repeat is recorded and scrobbled as a new play.
+func (a *app) streamAudio(item youtube.MusicItem, startAt time.Duration, changed, newPlay bool) {
 	cache := a.currentAudioCache()
 	accountProgress := a.signedIn()
 	// The work below runs off the main thread, so it takes what it needs of
@@ -111,7 +113,7 @@ func (a *app) streamAudio(item youtube.MusicItem, startAt time.Duration, changed
 		}
 		log.Printf("playback: audio started video_id=%s from_cache=%t duration=%s", item.VideoID, found.fromCache, found.total)
 		a.applySpeed() // a speed chosen while the audio was on its way
-		a.audioStarted(item, found, a.player.Position(), changed, cache)
+		a.audioStarted(item, found, a.player.Position(), changed, newPlay, cache)
 		a.syncSystemMedia()
 	})
 }
@@ -119,11 +121,13 @@ func (a *app) streamAudio(item youtube.MusicItem, startAt time.Duration, changed
 // audioStarted takes note of a track whose audio has begun to play from
 // position: the run of skips ends, the play is recorded and reported, its
 // audio is cached for the next time, and the track after it is readied.
-// cache is the audio cache the track was looked for in.
-func (a *app) audioStarted(item youtube.MusicItem, found resolvedAudio, position time.Duration, changed bool, cache *audio.Cache) {
+// cache is the audio cache the track was looked for in. changed says the
+// track is another than the one before; newPlay says the play is a new one,
+// so playing the same track again counts as a play.
+func (a *app) audioStarted(item youtube.MusicItem, found resolvedAudio, position time.Duration, changed, newPlay bool, cache *audio.Cache) {
 	a.skipped = 0
 	a.aiRefills = 0
-	if changed {
+	if newPlay {
 		a.recordHistory(item)
 	}
 	if item.IsEpisode() {
@@ -168,7 +172,7 @@ func (a *app) following() (int, youtube.MusicItem, bool) {
 // every poll and after anything that can change what follows.
 func (a *app) syncPreload() {
 	_, next, ok := a.following()
-	if ok && a.settings.ExcludeAIGenerated && isMusicTrack(next) && a.aiDisclosure(next) != youtube.AINone {
+	if ok && (a.settings.ExcludeAIGenerated && isMusicTrack(next) && a.aiDisclosure(next) != youtube.AINone || a.artistBlocks(next)) {
 		// Nothing is eligible to preload yet. Still run the cleanup below:
 		// the held audio may belong to a track the filter just removed.
 		ok = false
@@ -239,7 +243,7 @@ func (a *app) followed(tag string) {
 		}
 	}
 	log.Printf("playback: audio followed on video_id=%s from_cache=%t duration=%s", item.VideoID, found.fromCache, found.total)
-	a.audioStarted(item, found.resolvedAudio, startAt, changed, a.currentAudioCache())
+	a.audioStarted(item, found.resolvedAudio, startAt, changed, true, a.currentAudioCache())
 	a.afterEnter(item, changed)
 	a.syncSystemMedia()
 }
@@ -380,7 +384,7 @@ func (a *app) warmNext() {
 	if !ok {
 		return
 	}
-	if a.settings.ExcludeAIGenerated && isMusicTrack(next) && a.aiDisclosure(next) != youtube.AINone {
+	if a.settings.ExcludeAIGenerated && isMusicTrack(next) && a.aiDisclosure(next) != youtube.AINone || a.artistBlocks(next) {
 		return
 	}
 	// In repeat-track mode following is the current track, whose audio is

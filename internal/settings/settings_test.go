@@ -102,6 +102,45 @@ func TestRememberKeepsRecentSearchesUniqueAndBounded(t *testing.T) {
 	}
 }
 
+// TestParseKeepsTheWavyProgressChoice checks the setting behind the Appearance
+// switch: on for a settings file written before it existed, and whichever way
+// the user last set it.
+func TestParseKeepsTheWavyProgressChoice(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{"older file", `{}`, true},
+		{"turned off", `{"wavyProgress":false}`, false},
+		{"turned on", `{"wavyProgress":true}`, true},
+	} {
+		got, err := Parse([]byte(test.input))
+		if err != nil {
+			t.Fatalf("%s: %v", test.name, err)
+		}
+		if got.WavyProgress != test.want {
+			t.Errorf("%s: wavy progress = %t, want %t", test.name, got.WavyProgress, test.want)
+		}
+	}
+}
+
+// TestParseKeepsBlockedArtistsAndDropsEntriesWithNoID checks what a saved
+// blocked-artist list is read back as: the artists kept, and a hand-edited
+// entry with no channel ID dropped, since it could match no song.
+func TestParseKeepsBlockedArtistsAndDropsEntriesWithNoID(t *testing.T) {
+	got, err := Parse([]byte(`{"blockedArtists":[{"id":"UCbad","name":"Bad Artist"},{"name":"No ID"}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.BlockedArtists) != 1 || got.BlockedArtists[0].ID != "UCbad" || got.BlockedArtists[0].Name != "Bad Artist" {
+		t.Fatalf("blocked artists = %v, want only the one with an ID", got.BlockedArtists)
+	}
+	if !got.ArtistBlocked("UCbad") || got.ArtistBlocked("UCgood") || got.ArtistBlocked("") {
+		t.Errorf("ArtistBlocked did not follow the list: %v", got.BlockedArtists)
+	}
+}
+
 func TestParseColorsReadsMatugenOutputAndRefusesTypos(t *testing.T) {
 	// A trimmed colors.json as matugen writes it from the README's template.
 	colors, err := ParseColors([]byte(`{

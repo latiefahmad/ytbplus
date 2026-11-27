@@ -21,6 +21,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/latiefahmad/ytbplus/internal/audio"
+	"github.com/latiefahmad/ytbplus/internal/history"
 	"github.com/latiefahmad/ytbplus/internal/playstate"
 	"github.com/latiefahmad/ytbplus/youtube"
 )
@@ -160,6 +161,54 @@ func TestRepeatModes(t *testing.T) {
 	a.cycleRepeat() // off
 	if a.repeat != repeatOff {
 		t.Errorf("a third press left repeat %d", a.repeat)
+	}
+}
+
+// TestARepeatedTrackIsRecordedAgain covers repeat-one and playing a track over:
+// the same song playing again is a new play of its own, in the history and on
+// disk, and not skipped for being the track before.
+func TestARepeatedTrackIsRecordedAgain(t *testing.T) {
+	a, _ := tonesApp(t, 5)
+	a.historyPath = filepath.Join(t.TempDir(), "history.json")
+	t.Cleanup(a.historyWriter.Wait)
+	a.repeat = repeatTrack
+	q := []youtube.MusicItem{song("a")}
+	a.play(q[0], q)
+	pollUntil(t, a, "the first play", func() bool { return len(a.history) == 1 })
+	a.trackEnded()
+	pollUntil(t, a, "the repeat", func() bool { return len(a.history) == 2 })
+	if a.history[0].VideoID != "a" || a.history[1].VideoID != "a" {
+		t.Fatalf("history = %+v, want two plays of the same track", a.history)
+	}
+	a.historyWriter.Wait()
+	if saved := history.Read(a.historyPath); len(saved) != 2 {
+		t.Errorf("saved history has %d plays, want 2", len(saved))
+	}
+}
+
+// TestANewPlayIsRecordedWithoutWaitingForAudio pins what startTrackNow relies
+// on, without needing ffmpeg: a play of its own is recorded even when it is the
+// same track again, and re-attaching to the track already playing is not.
+func TestANewPlayIsRecordedWithoutWaitingForAudio(t *testing.T) {
+	a := newTestApp(t)
+	a.historyPath = filepath.Join(t.TempDir(), "history.json")
+	a.historyLoaded = true
+	t.Cleanup(a.historyWriter.Wait)
+	item := song("a")
+	// fromCache keeps the cache out of it, which a test app does not open.
+	found := resolvedAudio{fromCache: true}
+
+	a.audioStarted(item, found, 0, false, false, a.currentAudioCache())
+	if len(a.history) != 0 {
+		t.Fatalf("history = %+v, want re-attaching to record nothing", a.history)
+	}
+	a.audioStarted(item, found, 0, false, true, a.currentAudioCache())
+	if len(a.history) != 1 || a.history[0].VideoID != "a" {
+		t.Fatalf("history = %+v, want the repeat recorded", a.history)
+	}
+	a.historyWriter.Wait()
+	if saved := history.Read(a.historyPath); len(saved) != 1 {
+		t.Errorf("saved history has %d plays, want 1", len(saved))
 	}
 }
 

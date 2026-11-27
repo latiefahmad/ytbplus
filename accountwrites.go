@@ -90,6 +90,11 @@ func (a *app) toggleRating(item youtube.MusicItem, rating youtube.LikeStatus) {
 		}
 		a.notice = "Could not " + verb + " “" + item.Title + "”: " + firstLine(err.Error())
 	})
+	// YouTube Music moves on when you dislike the song you are hearing;
+	// disliking any other song leaves playback where it is.
+	if after == youtube.Disliked && id == a.current.VideoID && a.player.Active() {
+		a.advance()
+	}
 }
 
 // eachItem calls fn with every copy of a track or an item the app holds: the

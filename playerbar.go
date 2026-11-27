@@ -68,22 +68,28 @@ func (a *app) transport(c *ui.Context, size float32, gap float32) {
 	})
 }
 
-// scrubber is the position slider: a wave that travels while the music plays
-// and goes flat when it stops. It follows the player until the user takes it,
+// scrubber is the position slider, drawn as a wave that travels while the
+// music plays and goes flat when it stops, or as a plain line when the Wavy
+// progress bar setting is off. It follows the player until the user takes it,
 // and seeks when they let go. Times stand at both ends.
 func (a *app) scrubber(c *ui.Context) {
 	sc := m3.Of(c).Scheme
 	known := a.total > 0
 	total := a.total.Seconds()
-	if !known {
-		total, a.scrub = 1, 0
+	position := &a.scrub
+	if known {
+		a.scrub = min(a.scrub, total)
+	} else {
+		// A track whose length is not known yet has nowhere to seek to, and
+		// its saved position is not to be overwritten by a disabled slider.
+		var disabledPosition float64
+		total, position = 1, &disabledPosition
 	}
-	a.scrub = min(a.scrub, total)
 	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-		m3.Text(c, m3.LabelMedium, clock(time.Duration(a.scrub*float64(time.Second)))).
+		m3.Text(c, m3.LabelMedium, clock(time.Duration(*position*float64(time.Second)))).
 			MinWidth(40).NoWrap().TextAlign(ui.End).Shrink(0).TextColor(sc.OnSurfaceVariant).FontFeatures("tnum")
-		slider := m3.Slider(c, &a.scrub, 0, total, m3.SliderSpec{
-			Label: "Position", Key: "scrubber", Wavy: true, Waving: a.player.Playing(), Disabled: !known,
+		slider := m3.Slider(c, position, 0, total, m3.SliderSpec{
+			Label: "Position", Key: "scrubber", Wavy: a.settings.WavyProgress, Waving: a.player.Playing(), Disabled: !known,
 		})
 		if slider.Pressed() {
 			a.scrubbing = true

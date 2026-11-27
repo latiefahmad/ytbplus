@@ -57,12 +57,13 @@ var settingsRows = []settingsRow{
 	{key: "lastfm", search: "last.fm scrobbling music service", card: (*app).lastFMCard},
 
 	{key: "h-look", heading: "Appearance and sound"},
-	{key: "appearance", search: "theme appearance system light dark colour color colours colors violet indigo blue sky teal green lime amber orange red rose orchid hue palette tonal spot vibrant expressive neutral monochrome artwork dynamic matugen source", card: (*app).appearanceCard},
+	{key: "appearance", search: "theme appearance system light dark colour color colours colors violet indigo blue sky teal green lime amber orange red rose orchid hue palette tonal spot vibrant expressive neutral monochrome artwork dynamic matugen source wavy progress wave flat bar", card: (*app).appearanceCard},
 	{key: "sound", search: "sound audio normalize loudness logarithmic equaliser volume", card: (*app).soundCard},
 
 	{key: "h-playback", heading: "Playback"},
 	{key: "playback", search: "auto skip disliked songs thumbs down", card: (*app).playbackCard},
 	{key: "crossfade", search: "crossfade fade transition gap between tracks songs seconds", card: (*app).crossfadeCard},
+	{key: "blocked", search: "block blocked artists hide skip mute unblock songs", card: (*app).blockedArtistsCard},
 	{key: "ai", search: "ai artificial intelligence generated exclude skip filter songs", card: (*app).aiFilterCard},
 
 	{key: "h-system", heading: "System"},
@@ -286,6 +287,17 @@ func (a *app) appearanceCard(c *ui.Context) {
 				})
 			})
 		}
+
+		// The position slider: a wave that travels while music plays, or a
+		// flat line for those who would rather it kept still.
+		ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
+			settingLabel(c, "Wavy progress bar", "Draw the position slider as a wave that moves while music plays. Turn it off for a flat bar.").Grow(1)
+			on := a.settings.WavyProgress
+			if m3.Switch(c, &on, "Use wavy progress bar").Changed() {
+				a.settings.WavyProgress = on
+				a.saveSettings()
+			}
+		})
 
 		// How large the interface is, at a readable size in the interface
 		// that grows with it.

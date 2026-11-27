@@ -288,6 +288,9 @@ func (s *accountState) renewSession(ctx context.Context, cookie string, from ses
 // and reloads the page the change of account leaves stale.
 func (a *app) useSession(s *session, from sessionSource) {
 	a.stopAccountWork()
+	// The first session after a start is the saved sign-in coming back, not a
+	// change of account: the ratings restored with the queue stay.
+	first := a.account.session == nil
 	if a.account.session != s {
 		a.finishEpisodeProgress(false)
 	}
@@ -300,7 +303,7 @@ func (a *app) useSession(s *session, from sessionSource) {
 		a.settings.AccountIndex, a.settings.AccountEmail = s.accountIndex, s.details.Email
 		a.saveSettings()
 	}
-	a.accountChanged()
+	a.accountChanged(!first)
 	// The channel switcher fills in after the account is in use, so a slow
 	// channel list does not hold up the sign-in. The list is filed with the
 	// session it was read for, wherever the account has gone since.
@@ -328,7 +331,7 @@ func (a *app) endSession(reason string) {
 		a.notice = reason
 	}
 	if had {
-		a.accountChanged()
+		a.accountChanged(true)
 	}
 }
 
@@ -353,12 +356,25 @@ func (a *app) stopAccountWork() {
 // accountChanged reloads the page when it is one the account changes. The
 // home page is loaded at launch, before the saved sign-in is back, so it
 // needs the reload as much as the library does.
-func (a *app) accountChanged() {
+//
+// forgetRatings drops the likes and dislikes the items hold: another account
+// has its own. The first session after a start is the saved sign-in coming
+// back, and keeps the ratings restored with the queue.
+func (a *app) accountChanged(forgetRatings bool) {
 	a.cancelSuggestions()
 	a.pages.Clear()
-	a.forgetAccountState()
+	// The account history belongs to the account that has just changed.
+	a.historyRemote.reset()
+	a.historyRev++
+	if forgetRatings {
+		a.forgetAccountState()
+	}
 	if r, _ := a.route(); r.load != nil {
 		a.reloadPage()
+	} else if r.id == routeHistory {
+		// History loads nothing of its own, so it asks for the account
+		// history again by hand.
+		a.loadRemoteHistory()
 	}
 }
 

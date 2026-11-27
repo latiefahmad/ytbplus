@@ -57,6 +57,7 @@ func (a *app) songRow(c *ui.Context, item youtube.MusicItem, queue []youtube.Mus
 	sc := m3.Of(c).Scheme
 	isSong := item.IsTrack()
 	playing := a.playingRow(item, o)
+	blocked := o.list != "queue" && a.artistBlocks(item)
 	selected := o.list == "queue" && a.nowPlaying.queueSelection.Has(queueRowKey(&a.queue, a.queue.rowOf(o.position)))
 	queueCursor := o.list == "queue" && a.nowPlaying.queueList.Focused(c) && a.nowPlaying.queueSelectionCursor == a.queue.rowOf(o.position)
 	key := songKey(item, o)
@@ -82,8 +83,11 @@ func (a *app) songRow(c *ui.Context, item youtube.MusicItem, queue []youtube.Mus
 	if playing {
 		container = sc.SecondaryContainer
 	}
-	var main, menuButton, menuAnchor ui.Element
+	var main, menuButton, menuAnchor, duration ui.Element
 	hasAnchor := false
+	// A row that shows a length keeps it against the row's edge, and the
+	// three-dot menu takes its place under the pointer.
+	hasLength := item.Duration != ""
 	row.Children(func() {
 		main = ui.ButtonBase(c.Key(key + "-activate")).FocusRing(false)
 		hovered := row.Hovered()
@@ -103,10 +107,13 @@ func (a *app) songRow(c *ui.Context, item youtube.MusicItem, queue []youtube.Mus
 		}
 		main.Children(func() {
 			titleColour, subColour := sc.OnSurface, sc.OnSurfaceVariant
-			if playing {
+			switch {
+			case playing:
 				titleColour, subColour = sc.OnSecondaryContainer, sc.OnSecondaryContainer.Alpha(0.8)
-			} else if selected {
+			case selected:
 				titleColour, subColour = sc.OnPrimary, sc.OnPrimary.Alpha(0.8)
+			case blocked:
+				titleColour, subColour = sc.OnSurface.Alpha(0.38), sc.OnSurfaceVariant.Alpha(0.38)
 			}
 			if o.number > 0 {
 				ui.Row(c).Size(artSize, artSize).Shrink(0).Center().Children(func() {
@@ -156,8 +163,8 @@ func (a *app) songRow(c *ui.Context, item youtube.MusicItem, queue []youtube.Mus
 				ui.Icon(c, m3.IconDownloadDone).FontSize(18).TextColor(subColour).Label("Downloaded")
 			}
 			switch {
-			case item.Duration != "":
-				m3.Text(c, m3.BodyMedium, item.Duration).SingleLine().Width(48).TextAlign(ui.End).
+			case hasLength:
+				duration = m3.Text(c, m3.BodyMedium, item.Duration).SingleLine().Width(48).TextAlign(ui.End).
 					TextColor(subColour).Shrink(0).FontFeatures("tnum")
 			case !isSong:
 				ui.Icon(c, m3.IconChevronRight).FontSize(24).TextColor(sc.OnSurfaceVariant)
@@ -176,7 +183,17 @@ func (a *app) songRow(c *ui.Context, item youtube.MusicItem, queue []youtube.Mus
 			Icon: m3.IconMore, Label: "More options for " + item.Title, Key: key + "-menu",
 			Container: menuContainer,
 		})
-		if !main.FocusVisible() && !menuButton.FocusVisible() && !a.menu.opened(key) && (!hovered || o.list == "queue") {
+		menuShown := main.FocusVisible() || menuButton.FocusVisible() || a.menu.opened(key) || (hovered && o.list != "queue")
+		if hasLength {
+			// The menu button leaves the flow and sits over the length, so
+			// the length reaches the row's edge until the menu takes its
+			// place.
+			menuButton.Attach(ui.AnchorRight, ui.AnchorRight).Right(4)
+			if menuShown {
+				duration.Opacity(0)
+			}
+		}
+		if !menuShown {
 			menuButton.Opacity(0).PassThrough()
 		}
 	})

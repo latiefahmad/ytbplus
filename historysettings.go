@@ -14,7 +14,7 @@ import (
 func (a *app) historyCard(c *ui.Context) {
 	a.settingsCard(c, "Listening history", m3.IconHistory, func() {
 		ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
-			body := fmt.Sprintf("%d plays are kept on this device, for the stats. ytbplus keeps the latest %d.", len(a.history), history.MaxEntries)
+			body := fmt.Sprintf("%d plays are kept on this device, for History and the stats. ytbplus keeps the latest %d.", len(a.history), history.MaxEntries)
 			if len(a.history) == 0 {
 				body = "No plays are kept on this device."
 			}

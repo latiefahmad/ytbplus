@@ -40,17 +40,36 @@ type queueMark struct {
 	recStart int
 	playNext string
 	source   string
+	// dislikes changes when a track's dislike does, so the queue is saved
+	// again even though its tracks and place are the same.
+	dislikes uint64
 }
 
 // mark summarises the queue. It reads every track's ID, which is cheap
 // beside the period it is asked at.
 func (q *queue) mark() queueMark {
-	h := fnv.New64a()
+	h, d := fnv.New64a(), fnv.New64a()
 	for _, item := range q.items {
 		_, _ = h.Write([]byte(item.VideoID))
 		_, _ = h.Write([]byte{0})
+		if item.Like == youtube.Disliked {
+			_, _ = d.Write([]byte(item.VideoID))
+			_, _ = d.Write([]byte{0})
+		}
 	}
-	return queueMark{h.Sum64(), q.index, q.recStart, q.playNext, q.source}
+	return queueMark{h.Sum64(), q.index, q.recStart, q.playNext, q.source, d.Sum64()}
+}
+
+// dislikes are the video IDs of the queue's disliked tracks, each once, in the
+// order they play.
+func (q *queue) dislikes() []string {
+	var ids []string
+	for _, item := range q.items {
+		if item.Like == youtube.Disliked && !slices.Contains(ids, item.VideoID) {
+			ids = append(ids, item.VideoID)
+		}
+	}
+	return ids
 }
 
 // state is the queue as it is saved, with the position in the current track.
@@ -58,6 +77,7 @@ func (q *queue) state(position time.Duration) playstate.State {
 	return playstate.State{
 		Items: q.items, Index: q.index, RecStart: q.recStart,
 		PlayNext: q.playNext, Source: q.source, Position: position,
+		Dislikes: q.dislikes(),
 	}.Window()
 }
 
@@ -65,6 +85,13 @@ func (q *queue) state(position time.Duration) playstate.State {
 func (q *queue) restore(s playstate.State) {
 	*q = newQueue()
 	q.items = slices.Clone(s.Items)
+	// The likes and dislikes themselves are not saved with the tracks, only
+	// the disliked IDs, so a restored queue knows which songs were disliked.
+	for i := range q.items {
+		if slices.Contains(s.Dislikes, q.items[i].VideoID) {
+			q.items[i].Like = youtube.Disliked
+		}
+	}
 	q.index, q.recStart, q.playNext, q.source = s.Index, s.RecStart, s.PlayNext, s.Source
 	q.regenerate()
 	for i := len(q.items) - 1; i > q.index; i-- {
@@ -85,7 +112,7 @@ func (a *app) restorePlayback(path string) {
 		return
 	}
 	a.queue.restore(s)
-	if a.settings.ExcludeAIGenerated {
+	if a.filtering() {
 		a.queue.dropMarkedAI(a.excludesItem)
 	}
 	item := a.queue.current()

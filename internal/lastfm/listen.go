@@ -53,6 +53,9 @@ type Listen struct {
 	Track  Track
 	Chosen bool
 
+	// begun says the first sample has been taken, whether or not the track
+	// was named yet, and confirmed says Started has been reported for it.
+	begun     bool
 	confirmed bool
 	started   time.Time
 	listened  time.Duration
@@ -84,22 +87,33 @@ func (l *Listen) Listened() time.Duration { return l.listened }
 // Observe takes a sample of the track playing: when it was taken, the player's
 // position, and the track's length, if known. It reports what became true, if
 // anything.
+//
+// The artist is often learned only after the track starts, so listening counts
+// from the first sample even while the track is not yet named. Started waits
+// for the name, and the play keeps the time it really began.
 func (l *Listen) Observe(at time.Time, position, total time.Duration) Event {
-	if l == nil || !l.Track.Valid() {
+	if l == nil {
+		return Nothing
+	}
+	if !l.begun {
+		l.begun, l.started = true, at
+		l.setLast(at, position)
+	} else {
+		if l.haveLast {
+			wait, moved := at.Sub(l.lastAt), position-l.lastPos
+			if wait > 0 && wait <= maxGap && moved >= 0 && moved <= wait+slack {
+				l.listened += moved
+			}
+		}
+		l.setLast(at, position)
+	}
+	if !l.Track.Valid() {
 		return Nothing
 	}
 	if !l.confirmed {
-		l.confirmed, l.started = true, at
-		l.setLast(at, position)
+		l.confirmed = true
 		return Started
 	}
-	if l.haveLast {
-		wait, moved := at.Sub(l.lastAt), position-l.lastPos
-		if wait > 0 && wait <= maxGap && moved >= 0 && moved <= wait+slack {
-			l.listened += moved
-		}
-	}
-	l.setLast(at, position)
 	if l.scrobbled {
 		return Nothing
 	}

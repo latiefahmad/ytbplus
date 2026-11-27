@@ -13,7 +13,7 @@ import (
 func (a *app) hero(c *ui.Context) {
 	sc := m3.Of(c).Scheme
 	d := a.page.detail
-	r, _ := a.route()
+	r, id := a.route()
 	artRadius := m3.ExtraLargeInc
 	if r.target == youtube.TargetArtist {
 		artRadius = m3.Full
@@ -66,6 +66,7 @@ func (a *app) hero(c *ui.Context) {
 				a.libraryButton(c)
 				a.downloadButton(c)
 				a.subscribeButton(c)
+				a.blockArtistButton(c, r, id)
 				if r.id == routePlaylist {
 					// One call site, beside the buttons that play the page:
 					// the control keeps its place, and its button, while it

@@ -21,6 +21,7 @@ const (
 	routeHome
 	routeExplore
 	routeLibrary
+	routeHistory
 	routeDownloads
 	routeSearch
 	routeSettings
@@ -147,6 +148,12 @@ func appRoutes() []route {
 			needsAccount: &signInPrompt{m3.IconLibraryFilled, "Your library lives here", "Sign in to see your songs, albums and playlists.", "your songs, albums and playlists"},
 		},
 		{
+			// History is read from this device and, when signed in, from the
+			// account: the page works with whichever it has.
+			id: routeHistory, empty: emptyMessage{"No listening history yet", "Songs you play in ytbplus show up here."}, pattern: "/history", title: "History", rail: &railEntry{label: "History", icon: m3.IconHistory, filled: m3.IconHistory}, heading: heading("History"), nav: routeHistory, source: "History", bare: true,
+			open: (*app).openHistory,
+		},
+		{
 			// Downloads are read from disk, not loaded: the page works offline.
 			id: routeDownloads, empty: emptyMessage{"No downloads yet", "Download songs, albums and playlists to play them offline."}, pattern: "/downloads", title: "Downloads", rail: &railEntry{label: "Downloads", icon: m3.IconDownload, filled: m3.IconDownloadFilled}, heading: heading("Downloads"), nav: routeDownloads, source: "Downloads", bare: true,
 		},
@@ -253,6 +260,13 @@ func (r *route) path(id string) string {
 
 // isDetail reports whether the page shows one album, playlist or artist.
 func (r *route) isDetail() bool { return r.target != youtube.TargetNone }
+
+// keepsBlockedSongs reports whether the page lists a blocked artist's songs
+// greyed out, so a whole album or playlist still reads as it is, instead of
+// leaving them out as the other lists do.
+func (r *route) keepsBlockedSongs() bool {
+	return r.id == routeAlbum || r.id == routePlaylist || r.id == routeArtist
+}
 
 // detailRoute is the page that shows an item of a kind, if it has one.
 func detailRoute(kind youtube.TargetKind) (*route, bool) {

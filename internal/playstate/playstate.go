@@ -37,6 +37,9 @@ type State struct {
 	Source string `json:"source,omitempty"`
 	// Position is how far into the current track playback had come.
 	Position time.Duration `json:"position,omitempty"`
+	// Dislikes are the video IDs of the saved queue's disliked tracks. They
+	// are saved beside the tracks so a restored queue still knows them.
+	Dislikes []string `json:"dislikes,omitempty"`
 	// Episodes are the podcast episodes left part-way through, the one left
 	// last first. They outlive the queue they were heard from.
 	Episodes []Episode `json:"episodes,omitempty"`
@@ -102,6 +105,11 @@ func (s State) sanitize() State {
 		out.PlayNext = s.PlayNext
 	}
 	out.Source = s.Source
+	for _, id := range s.Dislikes {
+		if slices.ContainsFunc(out.Items, func(t youtube.MusicItem) bool { return t.VideoID == id }) {
+			out.Dislikes = append(out.Dislikes, id)
+		}
+	}
 	if s.Position > 0 {
 		out.Position = s.Position
 	}
@@ -160,6 +168,7 @@ func (w *Writer) Save(s State) {
 		return
 	}
 	s.Items, s.Episodes = slices.Clone(s.Items), slices.Clone(s.Episodes)
+	s.Dislikes = slices.Clone(s.Dislikes)
 	w.mu.Lock()
 	w.next = &s
 	if w.running {

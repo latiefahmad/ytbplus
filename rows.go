@@ -106,9 +106,10 @@ type rowsKey struct {
 	// aiVersion changes when a track's AI label is learned, so a filter
 	// inside the rows' build function gets a fresh build.
 	aiVersion uint64
-	// excludeAI is part of the key so cached pages rebuild when the user
-	// changes the setting.
+	// excludeAI and blocked are part of the key so cached pages rebuild when
+	// the user changes the setting or blocks an artist.
 	excludeAI bool
+	blocked   uint64
 	// filter is the playlist search the rows show the matches of.
 	filter string
 	sort   playlistSort
@@ -121,8 +122,13 @@ func (a *app) syncRows() {
 	// A click that opens the Downloads page builds rows in the same frame,
 	// while the page held is still the one being left: only once the app
 	// has caught up with the router is the page the Downloads page's own.
-	if r.id == routeDownloads && a.location == a.router.Location() {
-		a.syncDownloadsPage()
+	if a.location == a.router.Location() {
+		if r.id == routeDownloads {
+			a.syncDownloadsPage()
+		}
+		if r.id == routeHistory {
+			a.syncHistoryPage()
+		}
 	}
 	s := a.pageState()
 	key := rowsKey{
@@ -130,7 +136,7 @@ func (a *app) syncRows() {
 		loading: s.loading, partial: s.partial, err: s.err, offline: s.offline, more: s.more, moreErr: s.moreErr,
 		moreBusy: a.pageMore.busy(), similar: len(s.similar), similarShown: s.similarShown,
 		shelves: shelfShape(s.sections), loose: len(s.items),
-		columns: a.gridColumns(r), aiVersion: a.aiFilter.generation(), excludeAI: a.settings.ExcludeAIGenerated,
+		columns: a.gridColumns(r), aiVersion: a.aiFilter.generation(), excludeAI: a.settings.ExcludeAIGenerated, blocked: a.blockedVersion,
 	}
 	if r.id == routeSearch {
 		key.submitted, key.top = a.search.submitted, a.search.top
@@ -142,8 +148,19 @@ func (a *app) syncRows() {
 	}
 	if a.page.rows == nil || a.page.rowsDirty || key != a.page.rowsKey {
 		a.page.rowsKey, a.page.rowsDirty = key, false
+		// An album, a playlist or an artist page keeps a blocked artist's
+		// songs, greyed out, so the whole thing still reads as it is; every
+		// other list leaves them out.
+		exclude := a.excludesItem
+		switch {
+		case r.keepsBlockedSongs():
+			exclude = a.aiExcludes
+		case r.id == routeHistory:
+			// History is the record of what played, not a recommendation.
+			exclude = nil
+		}
 		// Each page owns its rows alone, so the new ones reuse their memory.
-		a.page.rows, a.page.playable = buildRows(a.page.rows[:0], a.page.playable[:0], r, s, a.page.detail, key.top, key, a.excludesItem)
+		a.page.rows, a.page.playable = buildRows(a.page.rows[:0], a.page.playable[:0], r, s, a.page.detail, key.top, key, exclude)
 	}
 }
 
@@ -228,7 +245,7 @@ func buildRows(rows []row, playable []youtube.MusicItem, r *route, s *pageState,
 			rows = append(rows, row{kind: rowHeading, title: "Songs", shelf: "playlist-sort-header", track: -1})
 		}
 	}
-	vertical := collection || r.id == routeSearch || r.id == routeDownloads
+	vertical := collection || r.id == routeSearch || r.id == routeDownloads || r.id == routeHistory
 	// A playlist narrowed to a search shows only the songs that match, and
 	// the queue it gathers is still the whole playlist: playing a match
 	// plays the playlist from that song's own place in it.

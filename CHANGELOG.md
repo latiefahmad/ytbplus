@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-27
+
+### Added
+
+- **Block artists you never want to hear.** Choose Block artist in a song's menu, or Block on an artist's page, and ytbplus skips their songs, drops them from your queue, and hides them from search, recommendations and autoplay. On albums, playlists and artist pages their songs stay in the list, greyed out. A song that only features a blocked artist still plays. Unblock them from the same places, or from Settings, where Blocked artists lists everyone you blocked.
+- **The progress bar can be flat.** Appearance has a Wavy progress bar switch. Turn it off and the position bar stays a flat line instead of a travelling wave. It is on by default, and the choice is saved between runs.
+- **Browse your listening history.** History in the navigation rail lists the songs you played, grouped by day. When you are signed in, it also shows your YouTube Music account history and merges it into the same list, so plays from your phone show up next to plays on this computer.
+
+### Changed
+
+- **Disliking the song that is playing skips to the next one.** This matches YouTube Music. Disliking any other song does not change playback.
+- **A song row keeps its length at the right edge.** In playlists, albums, search results, Up next and the mini player, the length sits against the row's edge, and the three-dot menu takes its place under the pointer.
+- **The mini player uses smaller controls.** The Auto-play switch, Clear queue, Open ytbplus and Quit are sized for the narrow window.
+
+### Fixed
+
+- **Songs play with Bun installed.** yt-dlp cannot solve YouTube's challenges with newer Bun versions, so every song failed with "The page needs to be reloaded". ytbplus now uses Node.js, or the QuickJS the full build ships, and leaves Bun alone.
+- **A late artist lookup no longer shifts a Last.fm scrobble.** When ytbplus finds the artist after a track starts, the scrobble keeps the real start time, and the listening before the lookup finishes counts.
+- **Repeats count as plays.** Playing the same song again, including repeat-one, adds a new play to the stats instead of being skipped.
+- **The saved position survives a track whose length is not known yet.** The position slider no longer resets the saved place while the duration is still being looked up.
+- **Dislikes in the queue survive a restart.** After reopening ytbplus, songs you disliked still show as disliked and Auto-skip disliked songs keeps skipping them. Before, the queue came back without knowing which songs were disliked.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

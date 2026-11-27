@@ -76,6 +76,11 @@ type pageData struct {
 	rowsKey   rowsKey
 	// downloads is the version of the downloads the Downloads page shows.
 	downloads int
+	// historyRev changes whenever the plays or the account history do, so the
+	// History page rebuilds its rows; historyDay is the calendar day it was
+	// last built on, so today's heading rolls over at midnight.
+	historyRev int
+	historyDay int
 	// list is where the page is scrolled to, kept with it so that going back
 	// to a page shows it where it was left.
 	list *ui.ListState
